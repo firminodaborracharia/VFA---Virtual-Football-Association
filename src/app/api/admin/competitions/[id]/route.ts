@@ -1,0 +1,17 @@
+import { adminRoute, ok, readBody } from '@/lib/api';
+import { deleteCompetition, updateCompetition } from '@/lib/mutations';
+import { competitionSchema } from '@/lib/validators';
+
+export const dynamic = 'force-dynamic';
+
+export const PATCH = adminRoute(async (request, { params, session }) => {
+  const { id } = await params;
+  const input = await readBody(request, competitionSchema.partial());
+  return ok(await updateCompetition(id, input, session.user.id));
+});
+
+export const DELETE = adminRoute(async (_request, { params, session }) => {
+  const { id } = await params;
+  await deleteCompetition(id, session.user.id);
+  return ok({ deleted: true });
+});

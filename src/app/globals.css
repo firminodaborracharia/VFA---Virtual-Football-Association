@@ -1,26 +1,459 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/* ══════════════════════════════════════════════════════════════
+   VFA — Sistema de design
+
+   TODA cor do site sai daqui. Nenhum componente escreve um hex direto:
+   eles usam as classes utilitárias que apontam para estas variáveis.
+   Para trocar a identidade da VFA, altere apenas o bloco :root abaixo
+   (ou use o painel /admin/configuracoes, que injeta as mesmas variáveis
+   em tempo de execução e sobrepõe estes valores).
+   ══════════════════════════════════════════════════════════════ */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Marca ── */
+  --vfa-accent: #00e08f;
+  --vfa-accent-alt: #1e6bff;
+  --vfa-accent-warm: #ffb703;
+
+  /* ── Superfícies (modo escuro é o padrão do site) ── */
+  --vfa-bg: #070b12;
+  --vfa-bg-elevated: #0a1019;
+  --vfa-surface: #0e141f;
+  --vfa-surface-2: #141c2b;
+  --vfa-surface-3: #1b2536;
+
+  /* ── Texto ── */
+  --vfa-fg: #e9eef7;
+  --vfa-fg-muted: #8b98ad;
+  --vfa-fg-subtle: #5d6b81;
+
+  /* ── Traços ── */
+  --vfa-border: #1c2534;
+  --vfa-border-strong: #2a3648;
+
+  /* ── Semânticas ── */
+  --vfa-win: #22c55e;
+  --vfa-draw: #94a3b8;
+  --vfa-loss: #ef4444;
+  --vfa-live: #ff3b3b;
+
+  /* ── Sombras e curvas ── */
+  --vfa-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --vfa-shadow: 0 4px 24px -4px rgb(0 0 0 / 0.5);
+  --vfa-shadow-lg: 0 24px 60px -20px rgb(0 0 0 / 0.7);
+  --vfa-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: dark;
+}
+
+/* Modo claro: existe, mas o escuro é o padrão deliberado do site.
+   Só é aplicado quando o usuário escolhe explicitamente. */
+[data-theme='light'] {
+  --vfa-bg: #f5f7fb;
+  --vfa-bg-elevated: #ffffff;
+  --vfa-surface: #ffffff;
+  --vfa-surface-2: #f1f4f9;
+  --vfa-surface-3: #e6ebf3;
+  --vfa-fg: #0d1420;
+  --vfa-fg-muted: #55627a;
+  --vfa-fg-subtle: #8794a9;
+  --vfa-border: #dfe5ee;
+  --vfa-border-strong: #c6d0de;
+  --vfa-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --vfa-shadow: 0 4px 24px -6px rgb(15 23 42 / 0.12);
+  --vfa-shadow-lg: 0 24px 60px -20px rgb(15 23 42 / 0.2);
+
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--vfa-bg);
+  --color-bg-elevated: var(--vfa-bg-elevated);
+  --color-surface: var(--vfa-surface);
+  --color-surface-2: var(--vfa-surface-2);
+  --color-surface-3: var(--vfa-surface-3);
+
+  --color-fg: var(--vfa-fg);
+  --color-muted: var(--vfa-fg-muted);
+  --color-subtle: var(--vfa-fg-subtle);
+
+  --color-line: var(--vfa-border);
+  --color-line-strong: var(--vfa-border-strong);
+
+  --color-accent: var(--vfa-accent);
+  --color-accent-alt: var(--vfa-accent-alt);
+  --color-accent-warm: var(--vfa-accent-warm);
+
+  --color-win: var(--vfa-win);
+  --color-draw: var(--vfa-draw);
+  --color-loss: var(--vfa-loss);
+  --color-live: var(--vfa-live);
+
+  --font-sans: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+
+  --shadow-card: var(--vfa-shadow);
+  --shadow-pop: var(--vfa-shadow-lg);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ══════════════════════════════════════════════════════════════
+   Base
+   ══════════════════════════════════════════════════════════════ */
+
+* {
+  border-color: var(--vfa-border);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--vfa-bg);
+  color: var(--vfa-fg);
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Fundo com textura sutil de estádio — gradientes, sem imagem, sem custo de rede. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      color-mix(in oklab, var(--vfa-accent) 12%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 0%,
+      color-mix(in oklab, var(--vfa-accent-alt) 10%, transparent),
+      transparent 60%
+    );
+}
+
+::selection {
+  background-color: color-mix(in oklab, var(--vfa-accent) 35%, transparent);
+  color: var(--vfa-fg);
+}
+
+/* Barra de rolagem discreta e coerente com o tema. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--vfa-border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--vfa-accent) 50%, var(--vfa-border-strong));
+  background-clip: content-box;
+}
+
+:focus-visible {
+  outline: 2px solid var(--vfa-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Utilitários do projeto
+   ══════════════════════════════════════════════════════════════ */
+
+@utility container-vfa {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 84rem;
+  padding-inline: 1rem;
+
+  @media (min-width: 640px) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 1280px) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Cartão padrão do site. */
+@utility card-vfa {
+  background-color: var(--vfa-surface);
+  border: 1px solid var(--vfa-border);
+  border-radius: 1rem;
+  box-shadow: var(--vfa-shadow-sm);
+}
+
+/* Brilho de destaque atrás de elementos importantes. */
+@utility glow-accent {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--vfa-accent) 30%, transparent),
+    0 0 40px -10px color-mix(in oklab, var(--vfa-accent) 45%, transparent);
+}
+
+@utility text-gradient-accent {
+  background-image: linear-gradient(
+    100deg,
+    var(--vfa-accent) 0%,
+    var(--vfa-accent-alt) 60%,
+    var(--vfa-accent) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Tabelas largas rolam dentro do próprio container, nunca a página. */
+@utility table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Animações
+   Rápidas e curtas de propósito: o escopo pede elegância sem peso.
+   Todas respeitam prefers-reduced-motion no bloco do fim.
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes vfa-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes vfa-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vfa-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes vfa-pulse-live {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes vfa-sheen {
+  from {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(220%) skewX(-18deg);
+  }
+}
+
+@keyframes vfa-confetti-fall {
+  from {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@utility animate-fade-up {
+  animation: vfa-fade-up 0.5s var(--vfa-ease) both;
+}
+
+@utility animate-fade-in {
+  animation: vfa-fade-in 0.4s var(--vfa-ease) both;
+}
+
+@utility animate-pulse-live {
+  animation: vfa-pulse-live 1.4s ease-in-out infinite;
+}
+
+/* Esqueleto de carregamento. */
+@utility skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--vfa-surface-2) 0%,
+    var(--vfa-surface-3) 50%,
+    var(--vfa-surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: vfa-shimmer 1.4s linear infinite;
+  border-radius: 0.5rem;
+}
+
+/* Brilho que atravessa cards de destaque no hover. */
+@utility sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--vfa-fg) 8%, transparent),
+    transparent
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+}
+
+.sheen:hover::after {
+  animation: vfa-sheen 0.9s var(--vfa-ease);
+}
+
+/* Escalonamento das animações de entrada em listas. */
+.stagger > * {
+  animation: vfa-fade-up 0.45s var(--vfa-ease) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.1s; }
+.stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.stagger > *:nth-child(6) { animation-delay: 0.22s; }
+.stagger > *:nth-child(7) { animation-delay: 0.26s; }
+.stagger > *:nth-child(8) { animation-delay: 0.3s; }
+.stagger > *:nth-child(n + 9) { animation-delay: 0.34s; }
+
+/* ══════════════════════════════════════════════════════════════
+   Conteúdo das notícias (HTML já sanitizado no servidor)
+   ══════════════════════════════════════════════════════════════ */
+
+.prose-vfa {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--vfa-fg);
+}
+.prose-vfa > * + * {
+  margin-top: 1.15em;
+}
+.prose-vfa h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 2em;
+}
+.prose-vfa h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1.6em;
+}
+.prose-vfa a {
+  color: var(--vfa-accent);
+  text-underline-offset: 3px;
+  text-decoration: underline;
+}
+.prose-vfa blockquote {
+  border-left: 3px solid var(--vfa-accent);
+  padding-left: 1rem;
+  color: var(--vfa-fg-muted);
+  font-style: italic;
+}
+.prose-vfa ul,
+.prose-vfa ol {
+  padding-left: 1.4rem;
+}
+.prose-vfa ul {
+  list-style: disc;
+}
+.prose-vfa ol {
+  list-style: decimal;
+}
+.prose-vfa li + li {
+  margin-top: 0.4em;
+}
+.prose-vfa img {
+  border-radius: 0.75rem;
+  border: 1px solid var(--vfa-border);
+  max-width: 100%;
+  height: auto;
+}
+.prose-vfa figcaption {
+  color: var(--vfa-fg-subtle);
+  font-size: 0.875rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+.prose-vfa hr {
+  border-color: var(--vfa-border);
+  margin-block: 2em;
+}
+.prose-vfa code {
+  background: var(--vfa-surface-2);
+  padding: 0.15em 0.4em;
+  border-radius: 0.35rem;
+  font-size: 0.9em;
+}
+.prose-vfa table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.prose-vfa th,
+.prose-vfa td {
+  border: 1px solid var(--vfa-border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.prose-vfa th {
+  background: var(--vfa-surface-2);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Acessibilidade
+   ══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  body::before {
+    display: none;
+  }
 }
