@@ -11,7 +11,7 @@ import { z } from 'zod';
 const schema = z.object({
   DATABASE_URL: z
     .string()
-    .min(1, 'DATABASE_URL é obrigatória. Ex.: postgresql://user:pass@host:5432/vfa'),
+    .min(1, 'postgresql://postgres.tkrgunukbihurwonrvws:[YOUR-PASSWORD]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres'),
 
   AUTH_SECRET: z
     .string()
