@@ -67,7 +67,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang="pt-BR" className="h-full antialiased" style={cssVars} suppressHydrationWarning>
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col" suppressHydrationWarning>
         <ToastProvider>
           <SiteHeader user={user} siteName={settings.site.name} logoUrl={settings.site.logoUrl} />
 
