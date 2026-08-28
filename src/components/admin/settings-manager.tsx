@@ -32,9 +32,10 @@ export function SettingsManager({ settings }: { settings: Settings }) {
   const [brand, setBrand] = useState(settings.brand);
   const [site, setSite] = useState(settings.site);
   const [roblox, setRoblox] = useState(settings.roblox);
+  const [audio, setAudio] = useState(settings.audio);
   const [saving, setSaving] = useState<string | null>(null);
 
-  async function save(key: 'brand' | 'site' | 'roblox', value: unknown) {
+  async function save(key: 'brand' | 'site' | 'roblox' | 'audio', value: unknown) {
     setSaving(key);
     const result = await api.put('/api/admin/settings', { key, value });
     setSaving(null);
@@ -163,6 +164,52 @@ export function SettingsManager({ settings }: { settings: Settings }) {
               }
             />
           </Field>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Disco no canto da tela"
+          description="Trilha sonora do site"
+          action={
+            <Button size="sm" onClick={() => save('audio', audio)} loading={saving === 'audio'}>
+              <Save className="size-3.5" />
+              Salvar
+            </Button>
+          }
+        />
+        <div className="space-y-4 p-5">
+          <Checkbox
+            label="Mostrar o disco"
+            checked={audio.enabled}
+            onChange={(event) => setAudio({ ...audio, enabled: event.target.checked })}
+          />
+
+          <Field
+            label="Endereço do áudio"
+            hint="Coloque o arquivo em public/audio/ e use /audio/nome.mp3, ou cole uma URL completa. Deixe em branco para o disco ficar só como enfeite, sem som. Use apenas música que você tem direito de publicar — o arquivo fica acessível a qualquer visitante do site."
+          >
+            <Input
+              value={audio.url}
+              placeholder="/audio/tema.mp3"
+              onChange={(event) => setAudio({ ...audio, url: event.target.value })}
+            />
+          </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Nome da faixa">
+              <Input
+                value={audio.title}
+                onChange={(event) => setAudio({ ...audio, title: event.target.value })}
+              />
+            </Field>
+            <Field label="Artista">
+              <Input
+                value={audio.artist}
+                onChange={(event) => setAudio({ ...audio, artist: event.target.value })}
+              />
+            </Field>
+          </div>
         </div>
       </Card>
     </div>

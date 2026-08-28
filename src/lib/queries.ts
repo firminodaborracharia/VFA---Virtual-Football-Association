@@ -8,10 +8,11 @@
  */
 
 import { and, asc, count, desc, eq, gte, ilike, inArray, isNotNull, lte, or, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { cache } from 'react';
 
 import { db } from '@/db';
+import type { Locale } from '@/lib/i18n/dictionaries';
 import {
   clubSeasonMemberships,
   clubSeasonStats,
@@ -767,12 +768,38 @@ export async function getPlayerRanking(
 
 /* ── Notícias ──────────────────────────────────────────────── */
 
+
+/* ── Notícias em três idiomas ──────────────────────────────────
+   O idioma é escolhido no BANCO, com `coalesce`, e não em JavaScript depois
+   de trazer tudo. Duas razões: a consulta devolve as mesmas colunas em
+   qualquer idioma — nenhuma página precisa saber que tradução existe — e o
+   `coalesce` já implementa a regra de queda para o português sem um `if`
+   espalhado por cada componente.
+
+   `nullif(campo, '')` antes do coalesce é necessário: um campo salvo vazio
+   pelo formulário chega como string vazia, não NULL, e sem isso a matéria
+   apareceria com o título em branco em vez de cair no português.          */
+
+function localized(
+  base: AnyPgColumn,
+  english: AnyPgColumn,
+  spanish: AnyPgColumn,
+  locale: Locale,
+) {
+  if (locale === 'en') return sql<string>`coalesce(nullif(${english}, ''), ${base})`;
+  if (locale === 'es') return sql<string>`coalesce(nullif(${spanish}, ''), ${base})`;
+  return sql<string>`${base}`;
+}
+
 export async function listNews(options: {
   limit?: number;
   offset?: number;
   categorySlug?: string;
   includeUnpublished?: boolean;
+  /** Idioma da leitura. Sem tradução preenchida, cai no português. */
+  locale?: Locale;
 } = {}) {
+  const locale = options.locale ?? 'pt';
   const conditions = [];
 
   if (!options.includeUnpublished) {
@@ -790,9 +817,9 @@ export async function listNews(options: {
     .select({
       id: news.id,
       slug: news.slug,
-      title: news.title,
-      subtitle: news.subtitle,
-      excerpt: news.excerpt,
+      title: localized(news.title, news.titleEn, news.titleEs, locale),
+      subtitle: localized(news.subtitle, news.subtitleEn, news.subtitleEs, locale),
+      excerpt: localized(news.excerpt, news.excerptEn, news.excerptEs, locale),
       coverImageUrl: news.coverImageUrl,
       publishedAt: news.publishedAt,
       isFeatured: news.isFeatured,
@@ -818,15 +845,15 @@ export async function listNews(options: {
   return { rows, total: total?.value ?? 0 };
 }
 
-export async function getNewsBySlug(slug: string) {
+export async function getNewsBySlug(slug: string, locale: Locale = 'pt') {
   const [article] = await db
     .select({
       id: news.id,
       slug: news.slug,
-      title: news.title,
-      subtitle: news.subtitle,
-      excerpt: news.excerpt,
-      content: news.content,
+      title: localized(news.title, news.titleEn, news.titleEs, locale),
+      subtitle: localized(news.subtitle, news.subtitleEn, news.subtitleEs, locale),
+      excerpt: localized(news.excerpt, news.excerptEn, news.excerptEs, locale),
+      content: localized(news.content, news.contentEn, news.contentEs, locale),
       coverImageUrl: news.coverImageUrl,
       publishedAt: news.publishedAt,
       status: news.status,
@@ -1178,6 +1205,18 @@ export async function listNewsAdmin() {
       subtitle: news.subtitle,
       excerpt: news.excerpt,
       content: news.content,
+      // O painel recebe TODAS as versões, sem `coalesce`: quem edita precisa
+      // ver o que está de fato gravado em cada idioma, inclusive o que está
+      // vazio. A queda para o português é regra de leitura do site, não do
+      // formulário — ali ela esconderia o campo por preencher.
+      titleEn: news.titleEn,
+      subtitleEn: news.subtitleEn,
+      excerptEn: news.excerptEn,
+      contentEn: news.contentEn,
+      titleEs: news.titleEs,
+      subtitleEs: news.subtitleEs,
+      excerptEs: news.excerptEs,
+      contentEs: news.contentEs,
       coverImageUrl: news.coverImageUrl,
       status: news.status,
       isFeatured: news.isFeatured,

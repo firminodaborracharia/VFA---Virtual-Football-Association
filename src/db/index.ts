@@ -149,6 +149,45 @@ export async function withTimeout<T>(
 
 const TIMEOUT = Symbol('vfa-timeout');
 
+/**
+ * Prazo máximo para os dados de uma página, com FALHA em vez de silêncio.
+ *
+ * `withTimeout` acima serve ao layout raiz, onde o certo é degradar: o site
+ * continua no ar em modo deslogado. Numa página é o contrário. Uma home sem
+ * partidas e sem tabela não é uma home degradada, é uma home errada — e pior,
+ * indistinguível de um banco vazio.
+ *
+ * Aqui o prazo estourado vira erro de verdade, que sobe para o `error.tsx` com
+ * uma frase que diz o que aconteceu. Um esqueleto de carregamento que nunca
+ * termina é o pior resultado possível: não informa nada e não dá o que fazer.
+ */
+export async function withDeadline<T>(
+  promise: Promise<T>,
+  { ms = 25_000, label = 'Os dados da página' }: { ms?: number; label?: string } = {},
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const expired = new Promise<typeof TIMEOUT>((resolve) => {
+    timer = setTimeout(() => resolve(TIMEOUT), ms);
+  });
+
+  try {
+    const result = await Promise.race([promise, expired]);
+
+    if (result === TIMEOUT) {
+      throw new Error(
+        `${label} não chegaram em ${Math.round(ms / 1000)} segundos. ` +
+          'O banco não respondeu a tempo. Rode "npm run bench" para medir a conexão ' +
+          'e "npm run db:doctor" para o diagnóstico completo.',
+      );
+    }
+
+    return result as T;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 const client = globalThis.__vfaPostgres ?? createClient();
 
 if (process.env.NODE_ENV !== 'production') {

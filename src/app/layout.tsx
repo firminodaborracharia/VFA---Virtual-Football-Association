@@ -3,6 +3,9 @@ import type { ReactNode } from 'react';
 
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader, type HeaderUser } from '@/components/layout/site-header';
+import { VinylPlayer } from '@/components/layout/vinyl-player';
+import { findLocalTrack } from '@/lib/audio-file';
+import { getDictionary, getLocale, LOCALE_TAGS } from '@/lib/i18n';
 import { ToastProvider } from '@/components/ui/toast';
 import { getSession } from '@/lib/rbac';
 import { brandToCssVars, getSettings } from '@/lib/settings';
@@ -83,7 +86,16 @@ export const viewport: Viewport = {
  * o banco de novo em cada camada.
  */
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [session, settings] = await Promise.all([getSession(), getSettings()]);
+  const [session, settings, localTrack, locale, dict] = await Promise.all([
+    getSession(),
+    getSettings(),
+    findLocalTrack(),
+    getLocale(),
+    getDictionary(),
+  ]);
+
+  // O painel manda; a pasta é o atalho para quem só largou o arquivo lá.
+  const trackUrl = settings.audio.url.trim() || localTrack || '';
 
   const user: HeaderUser = session?.user
     ? {
@@ -102,10 +114,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   } as React.CSSProperties;
 
   return (
-    <html lang="pt-BR" className="h-full antialiased" style={cssVars} suppressHydrationWarning>
+    <html lang={LOCALE_TAGS[locale]} className="h-full antialiased" style={cssVars} suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
         <ToastProvider>
-          <SiteHeader user={user} siteName={settings.site.name} logoUrl={settings.site.logoUrl} />
+          <SiteHeader
+            user={user}
+            siteName={settings.site.name}
+            logoUrl={settings.site.logoUrl}
+            dict={dict}
+            locale={locale}
+          />
 
           <main className="flex-1">{children}</main>
 
@@ -113,7 +131,18 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             siteName={settings.site.name}
             fullName={settings.site.fullName}
             discordUrl={settings.site.discordInviteUrl}
+            dict={dict}
           />
+
+          {settings.audio.enabled ? (
+            <VinylPlayer
+              track={{
+                url: trackUrl,
+                title: settings.audio.title,
+                artist: settings.audio.artist,
+              }}
+            />
+          ) : null}
         </ToastProvider>
       </body>
     </html>

@@ -1,0 +1,19 @@
+Trilha sonora do site
+=====================
+
+Coloque aqui o arquivo de música (.mp3, .m4a ou .ogg) e aponte para ele em
+/admin/configuracoes → "Disco no canto da tela" → Endereço do áudio.
+
+Exemplo: um arquivo chamado tema.mp3 nesta pasta tem o endereço /audio/tema.mp3
+
+IMPORTANTE
+----------
+Use apenas música que você tem direito de publicar. Um arquivo colocado aqui
+fica acessível para download por qualquer visitante do site — publicar faixa
+comercial de terceiros aqui é distribuição não autorizada, não uso pessoal.
+
+Alternativas seguras: música própria, faixas com licença Creative Commons que
+permita uso comercial, ou bibliotecas de trilha livre de royalties.
+
+Deixe o endereço em branco no painel e o disco continua no canto da tela,
+girando, apenas como elemento visual.

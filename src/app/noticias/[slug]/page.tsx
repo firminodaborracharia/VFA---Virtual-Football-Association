@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { NewsCard } from '@/components/domain/cards';
+import { getLocale } from '@/lib/i18n';
 import { getNewsBySlug, listNews } from '@/lib/queries';
 import { isAdmin, getSession } from '@/lib/rbac';
 import { sanitizeNewsHtml } from '@/lib/sanitize';
@@ -17,7 +18,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const article = await getNewsBySlug(slug);
+  const article = await getNewsBySlug(slug, await getLocale());
   if (!article) return { title: 'Notícia não encontrada' };
 
   return {
@@ -38,7 +39,8 @@ export default async function NewsArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [article, session] = await Promise.all([getNewsBySlug(slug), getSession()]);
+  const locale = await getLocale();
+  const [article, session] = await Promise.all([getNewsBySlug(slug, locale), getSession()]);
 
   if (!article) notFound();
 
@@ -49,7 +51,7 @@ export default async function NewsArticlePage({
   // aviso claro de que a matéria ainda não está no ar.
   if (!isPublished && !isAdmin(session)) notFound();
 
-  const [related] = await Promise.all([listNews({ limit: 4 })]);
+  const [related] = await Promise.all([listNews({ limit: 4, locale })]);
   const others = related.rows.filter((item) => item.slug !== article.slug).slice(0, 3);
 
   // Sanitizamos de novo na leitura. O conteúdo já é sanitizado ao gravar; esta

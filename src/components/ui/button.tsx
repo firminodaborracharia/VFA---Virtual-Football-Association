@@ -11,13 +11,24 @@ const base =
   'disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 ' +
   'focus-visible:outline-accent active:scale-[0.98] motion-reduce:active:scale-100 whitespace-nowrap';
 
+/**
+ * Botões de vidro.
+ *
+ * `primary` é a única exceção que continua sólida — e de propósito. Se o botão
+ * principal também fosse translúcido, ele teria o mesmo peso visual dos
+ * outros, e a página perderia o ponto para onde o olho deve ir primeiro.
+ * Transparência em tudo é o mesmo que transparência em nada.
+ *
+ * Os demais ganham `glass-*`: contorno visível, preenchimento quase ausente,
+ * e o fundo do site aparecendo através deles.
+ */
 const variants: Record<Variant, string> = {
   primary:
     'bg-accent text-black hover:brightness-110 shadow-[0_6px_24px_-8px_var(--vfa-accent)] hover:shadow-[0_10px_30px_-8px_var(--vfa-accent)]',
-  secondary: 'bg-surface-3 text-fg hover:bg-surface-2 border border-line-strong',
-  outline: 'border border-line-strong text-fg hover:border-accent/60 hover:text-accent',
-  ghost: 'text-muted hover:bg-surface-2 hover:text-fg',
-  danger: 'bg-loss/90 text-white hover:bg-loss',
+  secondary: 'glass-button text-fg hover:bg-fg/12',
+  outline: 'glass-accent hover:brightness-125',
+  ghost: 'text-muted hover:bg-fg/8 hover:text-fg',
+  danger: 'bg-loss/85 text-white backdrop-blur-md hover:bg-loss',
 };
 
 const sizes: Record<Size, string> = {

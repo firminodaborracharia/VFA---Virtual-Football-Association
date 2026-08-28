@@ -14,6 +14,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Tabs } from '@/components/ui/tabs';
 import { parseConfig, TIEBREAKER_LABELS } from '@/lib/engine/config';
+import { getDictionary } from '@/lib/i18n';
 import {
   getCompetitionBySlug,
   getCompetitionMatches,
@@ -48,6 +49,7 @@ export default async function CompetitionPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const dict = await getDictionary();
   const { slug } = await params;
   const competition = await getCompetitionBySlug(slug);
   if (!competition) notFound();
@@ -144,7 +146,7 @@ export default async function CompetitionPage({
       label: 'Classificação',
       content: (
         <div className="space-y-3">
-          <StandingsTable rows={standings} zones={zones} pointsPerWin={config.points.win} />
+          <StandingsTable rows={standings} zones={zones} pointsPerWin={config.points.win} dict={dict} />
           <p className="text-xs text-subtle">
             Pontuação: vitória {config.points.win}, empate {config.points.draw}, derrota{' '}
             {config.points.loss}. Desempate:{' '}

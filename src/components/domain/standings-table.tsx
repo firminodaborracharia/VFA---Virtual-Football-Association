@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { FormDot } from '@/components/ui/badge';
+import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { ClubCrest } from '@/components/common/remote-image';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Zone } from '@/lib/engine/standings';
@@ -30,6 +31,7 @@ export function StandingsTable({
   compact = false,
   highlightClubId,
   showForm = true,
+  dict,
 }: {
   rows: StandingEntry[];
   zones?: ZoneDefinition[];
@@ -38,12 +40,13 @@ export function StandingsTable({
   compact?: boolean;
   highlightClubId?: string;
   showForm?: boolean;
+  dict: Dictionary;
 }) {
   if (rows.length === 0) {
     return (
       <EmptyState
-        title="Tabela ainda vazia"
-        description="A classificação aparece assim que as primeiras partidas desta competição forem registradas."
+        title={dict.standings.empty}
+        description={dict.standings.emptyHelp}
       />
     );
   }
@@ -58,35 +61,35 @@ export function StandingsTable({
                 #
               </th>
               <th scope="col" className="py-3 text-left font-semibold">
-                Clube
+                {dict.standings.club}
               </th>
               <th scope="col" className="w-12 py-3 text-center font-bold text-fg">
-                P
+                {dict.standings.points}
               </th>
               <th scope="col" className="w-12 py-3 text-center font-semibold">
-                J
+                {dict.standings.played}
               </th>
               <th scope="col" className="w-12 py-3 text-center font-semibold">
-                V
+                {dict.standings.won}
               </th>
               <th scope="col" className="w-12 py-3 text-center font-semibold">
-                E
+                {dict.standings.drawn}
               </th>
               <th scope="col" className="w-12 py-3 text-center font-semibold">
-                D
+                {dict.standings.lost}
               </th>
               {!compact ? (
                 <>
                   <th scope="col" className="w-12 py-3 text-center font-semibold">
-                    GP
+                    {dict.standings.goalsFor}
                   </th>
                   <th scope="col" className="w-12 py-3 text-center font-semibold">
-                    GC
+                    {dict.standings.goalsAgainst}
                   </th>
                 </>
               ) : null}
               <th scope="col" className="w-14 py-3 text-center font-semibold">
-                SG
+                {dict.standings.goalDifference}
               </th>
               {!compact ? (
                 <th scope="col" className="w-16 py-3 text-center font-semibold">
@@ -95,7 +98,7 @@ export function StandingsTable({
               ) : null}
               {showForm && !compact ? (
                 <th scope="col" className="w-36 py-3 pr-4 text-right font-semibold">
-                  Últimos 5
+                  {dict.standings.lastFive}
                 </th>
               ) : null}
             </tr>

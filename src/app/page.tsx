@@ -8,6 +8,7 @@ import { StandingsTable } from '@/components/domain/standings-table';
 import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { withDeadline } from '@/db';
 import { parseConfig } from '@/lib/engine/config';
 import {
   getActiveSeason,
@@ -21,6 +22,7 @@ import {
   listMatches,
   listNews,
 } from '@/lib/queries';
+import { getDictionary, getLocale } from '@/lib/i18n';
 import { getSettings } from '@/lib/settings';
 import { cn, COMPETITION_TYPE_LABELS } from '@/lib/utils';
 
@@ -29,6 +31,8 @@ import { cn, COMPETITION_TYPE_LABELS } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
+  const dict = await getDictionary();
+  const locale = await getLocale();
   const settings = await getSettings();
   const season = await getActiveSeason();
 
@@ -37,9 +41,9 @@ export default async function HomePage() {
       <div className="container-vfa py-20">
         <EmptyState
           icon={<Trophy className="size-7" />}
-          title="Nenhuma temporada cadastrada ainda"
-          description="Crie a primeira temporada no painel administrativo, ou rode o seed de demonstração para ver o site preenchido."
-          action={<ButtonLink href="/admin/temporadas">Ir para o painel</ButtonLink>}
+          title={dict.home.noSeason}
+          description={dict.home.noSeasonHelp}
+          action={<ButtonLink href="/admin/temporadas">{dict.home.goToAdmin}</ButtonLink>}
         />
       </div>
     );
@@ -47,17 +51,28 @@ export default async function HomePage() {
 
   const now = new Date();
 
+  /**
+   * `withDeadline` para que a home nunca fique num esqueleto eterno.
+   *
+   * São dez consultas em paralelo. Se o banco parar de responder no meio, o
+   * `Promise.all` fica pendente para sempre e o visitante vê o carregamento
+   * girar sem fim — sem erro na tela, sem nada no terminal. Com prazo, isso
+   * vira uma mensagem que diz o que aconteceu e o que rodar.
+   */
   const [leagues, competitions, upcoming, recent, latestNews, topScorers, topAssists, totals] =
-    await Promise.all([
-      listLeagues(),
-      listCompetitions(season.id),
-      listMatches({ seasonId: season.id, status: 'SCHEDULED', from: now, limit: 5, order: 'asc' }),
-      listMatches({ seasonId: season.id, status: 'FINISHED', limit: 6, order: 'desc' }),
-      listNews({ limit: 4 }),
-      getPlayerRanking('goals', { seasonId: season.id, limit: 1 }),
-      getPlayerRanking('assists', { seasonId: season.id, limit: 1 }),
-      getSeasonTotals(season.id),
-    ]);
+    await withDeadline(
+      Promise.all([
+        listLeagues(),
+        listCompetitions(season.id),
+        listMatches({ seasonId: season.id, status: 'SCHEDULED', from: now, limit: 5, order: 'asc' }),
+        listMatches({ seasonId: season.id, status: 'FINISHED', limit: 6, order: 'desc' }),
+        listNews({ limit: 4, locale }),
+        getPlayerRanking('goals', { seasonId: season.id, limit: 1 }),
+        getPlayerRanking('assists', { seasonId: season.id, limit: 1 }),
+        getSeasonTotals(season.id),
+      ]),
+      { label: 'Os dados da página inicial' },
+    );
 
   // Tabela resumida da primeira liga cadastrada.
   const featuredLeague = leagues[0] ?? null;
@@ -109,7 +124,7 @@ export default async function HomePage() {
               </span>
               <span className="display-vfa -mt-2 block text-4xl sm:text-6xl lg:text-7xl">
                 <span className="text-gradient-accent">{settings.site.name}</span>{' '}
-                <span className="text-fg">Temporada</span>
+                <span className="text-fg">{dict.home.seasonWord}</span>
               </span>
             </h1>
 
@@ -133,11 +148,11 @@ export default async function HomePage() {
             >
               <ButtonLink href="/partidas" size="lg">
                 <CalendarDays className="size-4.5" />
-                Ver partidas
+                {dict.home.viewMatches}
               </ButtonLink>
               <ButtonLink href="/classificacao" size="lg" variant="secondary">
                 <Table2 className="size-4.5" />
-                Ver classificação
+                {dict.home.viewStandings}
               </ButtonLink>
             </div>
           </div>
@@ -153,10 +168,10 @@ export default async function HomePage() {
         */}
         <div className="relative border-t border-line/60 bg-bg/40 backdrop-blur-sm">
           <div className="container-vfa grid grid-cols-2 divide-x divide-line/60 sm:grid-cols-4">
-            <HeroStat label="Clubes" value={totals.clubs} />
-            <HeroStat label="Jogadores" value={totals.players} />
-            <HeroStat label="Partidas" value={totals.matchesPlayed} />
-            <HeroStat label="Gols" value={totals.goals} accent />
+            <HeroStat label={dict.home.clubsCount} value={totals.clubs} />
+            <HeroStat label={dict.home.playersCount} value={totals.players} />
+            <HeroStat label={dict.home.matchesCount} value={totals.matchesPlayed} />
+            <HeroStat label={dict.home.goalsCount} value={totals.goals} accent />
           </div>
         </div>
       </section>
@@ -178,7 +193,7 @@ export default async function HomePage() {
           <SectionTitle
             title={`${settings.site.name} News`}
             href="/noticias"
-            linkLabel="Todas as notícias"
+            linkLabel={dict.home.allNews}
           />
           {featuredArticle ? (
             <div className="space-y-4">
@@ -194,8 +209,8 @@ export default async function HomePage() {
           ) : (
             <EmptyState
               icon={<Newspaper className="size-6" />}
-              title="Nenhuma notícia publicada"
-              description="As matérias da VFA News aparecem aqui depois de publicadas no painel."
+              title={dict.home.noNews}
+              description={dict.home.noNewsHelp}
             />
           )}
         </section>
@@ -204,16 +219,16 @@ export default async function HomePage() {
         <section className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <SectionTitle
-              title="Próxima partida"
+              title={dict.home.nextMatch}
               href="/partidas"
-              linkLabel="Todas as partidas"
+              linkLabel={dict.home.allMatches}
             />
             {upcoming.rows[0] ? (
-              <MatchCard match={upcoming.rows[0]} label="Próximo confronto" />
+              <MatchCard match={upcoming.rows[0]} label={dict.home.nextFixture} />
             ) : (
               <EmptyState
-                title="Nenhuma partida agendada"
-                description="Quando o calendário da temporada for publicado, o próximo jogo aparece aqui."
+                title={dict.home.noMatches}
+                description={dict.home.noMatchesHelp}
               />
             )}
 
@@ -227,21 +242,21 @@ export default async function HomePage() {
           </div>
 
           <div className="space-y-4">
-            <SectionTitle title="Destaques" href="/destaques" linkLabel="Ver todos" />
+            <SectionTitle title={dict.home.highlights} href="/destaques" linkLabel={dict.home.viewAll} />
 
             {leader ? (
               <HighlightCard
-                label="Líder da tabela"
+                label={dict.home.tableLeader}
                 href={`/clubes/${leader.club.slug}`}
                 media={<ClubCrest club={leader.club} size={44} />}
                 title={leader.club.name}
-                subtitle={`${leader.points} pontos · ${leader.won}V ${leader.drawn}E ${leader.lost}D`}
+                subtitle={`${leader.points} ${dict.home.points} · ${leader.won}${dict.standings.winShort} ${leader.drawn}${dict.standings.drawShort} ${leader.lost}${dict.standings.lossShort}`}
               />
             ) : null}
 
             {scorer ? (
               <HighlightCard
-                label="Artilheiro"
+                label={dict.home.topScorer}
                 href={`/jogadores/${scorer.playerSlug}`}
                 media={
                   <PlayerAvatar
@@ -254,14 +269,14 @@ export default async function HomePage() {
                   />
                 }
                 title={scorer.playerName}
-                subtitle={`${scorer.goals} ${scorer.goals === 1 ? 'gol' : 'gols'} · ${scorer.clubName ?? 'sem clube'}`}
+                subtitle={`${scorer.goals} ${scorer.goals === 1 ? dict.home.goal : dict.home.goals} · ${scorer.clubName ?? dict.home.noClub}`}
                 value={scorer.goals}
               />
             ) : null}
 
             {assistant ? (
               <HighlightCard
-                label="Líder de assistências"
+                label={dict.home.topAssists}
                 href={`/jogadores/${assistant.playerSlug}`}
                 media={
                   <PlayerAvatar
@@ -274,7 +289,7 @@ export default async function HomePage() {
                   />
                 }
                 title={assistant.playerName}
-                subtitle={`${assistant.assists} ${assistant.assists === 1 ? 'assistência' : 'assistências'} · ${assistant.clubName ?? 'sem clube'}`}
+                subtitle={`${assistant.assists} ${dict.home.assists} · ${assistant.clubName ?? dict.home.noClub}`}
                 value={assistant.assists}
               />
             ) : null}
@@ -290,7 +305,7 @@ export default async function HomePage() {
 
         {/* ══════════ ÚLTIMOS RESULTADOS ══════════ */}
         <section>
-          <SectionTitle title="Últimos resultados" href="/partidas" linkLabel="Ver todos" />
+          <SectionTitle title={dict.home.latestResults} href="/partidas" linkLabel={dict.home.viewAll} />
           {recent.rows.length > 0 ? (
             <Card className="divide-y divide-line overflow-hidden">
               {recent.rows.map((match) => (
@@ -309,11 +324,12 @@ export default async function HomePage() {
         {featuredLeague && standings.length > 0 ? (
           <section>
             <SectionTitle
-              title={`Classificação — ${featuredLeague.name}`}
+              title={`${dict.home.standings} — ${featuredLeague.name}`}
               href="/classificacao"
-              linkLabel="Todas as ligas"
+              linkLabel={dict.home.fullTable}
             />
             <StandingsTable
+              dict={dict}
               rows={standings}
               zones={zones}
               pointsPerWin={
@@ -327,9 +343,9 @@ export default async function HomePage() {
         {competitions.length > 0 ? (
           <section>
             <SectionTitle
-              title="Competições em andamento"
+              title={dict.home.competitions}
               href="/competicoes"
-              linkLabel="Ver todas"
+              linkLabel={dict.home.viewAll}
             />
             <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {competitions

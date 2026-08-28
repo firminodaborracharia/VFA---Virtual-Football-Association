@@ -1,3 +1,4 @@
+import { getDictionary, getLocale } from '@/lib/i18n';
 import { Newspaper } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -23,6 +24,8 @@ export default async function NewsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = await getDictionary();
+  const locale = await getLocale();
   const params = await searchParams;
   const category = typeof params.categoria === 'string' ? params.categoria : undefined;
   const page = Math.max(1, Number(params.page ?? 1) || 1);
@@ -30,7 +33,7 @@ export default async function NewsPage({
   const [settings, categories, { rows, total }] = await Promise.all([
     getSettings(),
     listNewsCategories(),
-    listNews({ limit: PER_PAGE, offset: (page - 1) * PER_PAGE, categorySlug: category }),
+    listNews({ limit: PER_PAGE, offset: (page - 1) * PER_PAGE, categorySlug: category, locale }),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
@@ -39,7 +42,7 @@ export default async function NewsPage({
   return (
     <>
       <PageHeader
-        eyebrow="Jornalismo esportivo"
+        eyebrow={dict.pages.newsEyebrow}
         title={`${settings.site.name} News`}
         description="Tudo o que acontece na liga: transferências, resultados, bastidores e comunicados oficiais."
       />

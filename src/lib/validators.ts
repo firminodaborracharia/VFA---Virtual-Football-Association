@@ -290,6 +290,26 @@ export const newsSchema = z
     subtitle: optionalText,
     excerpt: optionalText,
     content: z.string().min(1, 'A notícia não pode ficar vazia.'),
+
+    /**
+     * Traduções, todas opcionais.
+     *
+     * Sem mínimo de caracteres de propósito: o campo em português exige quatro
+     * porque uma matéria PRECISA de título. A versão em inglês não precisa
+     * existir, e obrigar um mínimo faria a validação recusar o salvamento de
+     * quem preencheu só metade das traduções — que é a situação normal de quem
+     * está traduzindo aos poucos.
+     */
+    titleEn: optionalText,
+    subtitleEn: optionalText,
+    excerptEn: optionalText,
+    contentEn: optionalText,
+
+    titleEs: optionalText,
+    subtitleEs: optionalText,
+    excerptEs: optionalText,
+    contentEs: optionalText,
+
     coverImageUrl: optionalUrl,
     categoryId: optionalText,
     status: z.enum(NEWS_STATUSES).default('DRAFT'),

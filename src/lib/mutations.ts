@@ -680,6 +680,30 @@ export async function setQualificationZones(
    NOTÍCIAS
    ══════════════════════════════════════════════════════════════ */
 
+
+/**
+ * Campos traduzidos, prontos para gravar.
+ *
+ * O conteúdo em inglês e espanhol passa pelo MESMO saneamento do português.
+ * Seria fácil esquecer isso — são campos "secundários", preenchidos depois —
+ * e o esquecimento abriria exatamente o buraco que o saneamento fecha: HTML
+ * com script gravado no banco, servido a todo visitante que ler no idioma
+ * traduzido. Um caminho de entrada sem saneamento anula os outros.
+ */
+function translationFields(input: NewsInput) {
+  return {
+    titleEn: input.titleEn,
+    subtitleEn: input.subtitleEn,
+    excerptEn: input.excerptEn,
+    contentEn: input.contentEn ? sanitizeNewsHtml(input.contentEn) : null,
+
+    titleEs: input.titleEs,
+    subtitleEs: input.subtitleEs,
+    excerptEs: input.excerptEs,
+    contentEs: input.contentEs ? sanitizeNewsHtml(input.contentEs) : null,
+  };
+}
+
 export async function createNews(input: NewsInput, actorId: string | null) {
   const slug = await ensureUniqueSlug('news', input.title);
   // Sanitiza ANTES de gravar: o banco nunca guarda HTML não confiável.
@@ -693,6 +717,7 @@ export async function createNews(input: NewsInput, actorId: string | null) {
       subtitle: input.subtitle,
       excerpt: input.excerpt ?? buildExcerpt(content),
       content,
+      ...translationFields(input),
       coverImageUrl: input.coverImageUrl,
       categoryId: input.categoryId,
       authorId: actorId,
@@ -718,6 +743,7 @@ export async function updateNews(newsId: string, input: NewsInput, actorId: stri
     subtitle: input.subtitle,
     excerpt: input.excerpt ?? buildExcerpt(content),
     content,
+    ...translationFields(input),
     coverImageUrl: input.coverImageUrl,
     categoryId: input.categoryId,
     status: input.status,

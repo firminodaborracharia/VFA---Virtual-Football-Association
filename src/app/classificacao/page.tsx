@@ -1,3 +1,4 @@
+import { getDictionary } from '@/lib/i18n';
 import { Table2 } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -27,6 +28,7 @@ export default async function StandingsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = await getDictionary();
   const params = await searchParams;
   const yearParam = typeof params.temporada === 'string' ? Number(params.temporada) : null;
 
@@ -41,7 +43,7 @@ export default async function StandingsPage({
   if (!season) {
     return (
       <>
-        <PageHeader title="Classificação" eyebrow="Tabelas" />
+        <PageHeader title={dict.standings.title} eyebrow={dict.pages.playersEyebrow} />
         <div className="container-vfa py-10">
           <EmptyState
             icon={<Table2 className="size-6" />}
@@ -70,7 +72,7 @@ export default async function StandingsPage({
     <>
       <PageHeader
         eyebrow={season.name}
-        title="Classificação"
+        title={dict.standings.title}
         description="As tabelas são recalculadas automaticamente a cada resultado registrado."
         actions={
           seasons.length > 1 ? (
@@ -126,6 +128,7 @@ export default async function StandingsPage({
                 </div>
 
                 <StandingsTable
+                  dict={dict}
                   rows={rows}
                   zones={zones}
                   pointsPerWin={config?.points.win ?? 3}

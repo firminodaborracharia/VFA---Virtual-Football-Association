@@ -1,3 +1,4 @@
+import { getDictionary } from '@/lib/i18n';
 import { Award, Star, Target, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -20,12 +21,13 @@ export const metadata: Metadata = {
 };
 
 export default async function HighlightsPage() {
+  const dict = await getDictionary();
   const [settings, season] = await Promise.all([getSettings(), getActiveSeason()]);
 
   if (!season) {
     return (
       <>
-        <PageHeader title="Destaques" eyebrow="Os melhores da liga" />
+        <PageHeader title={dict.pages.highlightsTitle} eyebrow={dict.pages.highlightsEyebrow} />
         <div className="container-vfa py-10">
           <EmptyState
             icon={<Star className="size-6" />}

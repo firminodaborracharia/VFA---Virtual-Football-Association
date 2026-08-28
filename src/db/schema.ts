@@ -652,6 +652,31 @@ export const news = pgTable(
     excerpt: text('excerpt'),
     /** HTML sanitizado no servidor antes de gravar. Ver src/lib/sanitize.ts. */
     content: text('content').notNull(),
+
+    /**
+     * Versões em inglês e espanhol — opcionais.
+     *
+     * Colunas ao lado, e não uma tabela `news_translations` separada. Uma
+     * tabela por tradução é o desenho certo quando o número de idiomas cresce
+     * ou varia por instalação; aqui são três, fixos, decididos no código. Com
+     * colunas, ler uma matéria continua sendo uma consulta só — sem join, sem
+     * risco de trazer a versão errada — e a escolha do idioma vira uma
+     * expressão em memória.
+     *
+     * Vazio significa "não traduzido", e o site cai no português. É melhor
+     * mostrar a matéria em português do que esconder a notícia de quem está
+     * lendo em inglês.
+     */
+    titleEn: text('title_en'),
+    subtitleEn: text('subtitle_en'),
+    excerptEn: text('excerpt_en'),
+    contentEn: text('content_en'),
+
+    titleEs: text('title_es'),
+    subtitleEs: text('subtitle_es'),
+    excerptEs: text('excerpt_es'),
+    contentEs: text('content_es'),
+
     coverImageUrl: text('cover_image_url'),
     categoryId: text('category_id').references(() => newsCategories.id, { onDelete: 'set null' }),
     authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),

@@ -1,3 +1,4 @@
+import { getDictionary } from '@/lib/i18n';
 import { Globe2, Trophy } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -30,6 +31,7 @@ export default async function CompetitionsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = await getDictionary();
   const params = await searchParams;
   const yearParam = typeof params.temporada === 'string' ? Number(params.temporada) : null;
 
@@ -41,7 +43,7 @@ export default async function CompetitionsPage({
   if (!season) {
     return (
       <>
-        <PageHeader title="Competições" eyebrow="Torneios" />
+        <PageHeader title={dict.pages.competitionsTitle} eyebrow={dict.pages.competitionsEyebrow} />
         <div className="container-vfa py-10">
           <EmptyState
             icon={<Globe2 className="size-6" />}
@@ -66,7 +68,7 @@ export default async function CompetitionsPage({
     <>
       <PageHeader
         eyebrow={season.name}
-        title="Competições"
+        title={dict.pages.competitionsTitle}
         description="Ligas nacionais, mata-matas, torneios continentais e a decisão intercontinental."
         actions={
           seasons.length > 1 ? (

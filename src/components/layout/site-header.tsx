@@ -7,7 +7,9 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { GlobalSearch } from '@/components/layout/global-search';
+import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 import { UserMenu } from '@/components/layout/user-menu';
+import type { Dictionary, Locale } from '@/lib/i18n/dictionaries';
 import { isActivePath, NAV_ITEMS } from '@/lib/nav';
 import { cn, DEFAULT_CREST } from '@/lib/utils';
 
@@ -22,10 +24,14 @@ export function SiteHeader({
   user,
   siteName,
   logoUrl,
+  dict,
+  locale,
 }: {
   user: HeaderUser;
   siteName: string;
   logoUrl: string | null;
+  dict: Dictionary;
+  locale: Locale;
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -75,9 +81,12 @@ export function SiteHeader({
       <header
         className={cn(
           'sticky top-0 z-50 border-b transition-all duration-300',
+          // Vidro nos dois estados. A diferença é o quanto ele fecha: no topo
+          // da página quase não há o que esconder, e depois da rolagem o
+          // conteúdo passa por baixo e precisa de mais desfoque.
           scrolled
-            ? 'border-line bg-bg/90 shadow-card backdrop-blur-xl'
-            : 'border-transparent bg-bg/40 backdrop-blur-sm',
+            ? 'border-line bg-bg/55 shadow-card backdrop-blur-2xl backdrop-saturate-150'
+            : 'border-transparent bg-bg/20 backdrop-blur-md backdrop-saturate-150',
         )}
       >
         {/* Fio de acento no topo absoluto da página. Detalhe pequeno, mas é o
@@ -131,7 +140,7 @@ export function SiteHeader({
                 >
                   <span className="flex items-center gap-1.5">
                     {item.adminOnly ? <ShieldCheck className="size-3.5" /> : null}
-                    {item.label}
+                    {dict.nav[item.key]}
                   </span>
                   {active ? (
                     /* Barra grossa e reta, não um traço fino arredondado. */
@@ -151,16 +160,18 @@ export function SiteHeader({
               type="button"
               onClick={() => setSearchOpen(true)}
               className="flex h-9 items-center gap-2 rounded-sm border border-line-strong bg-surface-2 px-2.5 text-sm text-subtle transition-colors hover:border-accent/40 hover:text-fg"
-              aria-label="Buscar no site"
+              aria-label={dict.nav.searchSite}
             >
               <Search className="size-4" />
               {/* Só a partir de 2xl: entre xl e 2xl o menu já ocupa a barra
                   inteira, e o rótulo aqui era o que empurrava tudo. */}
-              <span className="hidden 2xl:inline">Buscar</span>
+              <span className="hidden 2xl:inline">{dict.nav.search}</span>
               <kbd className="hidden rounded-sm border border-line px-1 font-mono text-[0.65rem] 2xl:inline">
                 ⌘K
               </kbd>
             </button>
+
+            <LocaleSwitcher current={locale} label={dict.nav.language} />
 
             {user ? (
               <UserMenu user={user} />
@@ -170,7 +181,7 @@ export function SiteHeader({
                 className="flex h-9 items-center gap-2 rounded-sm bg-accent px-3.5 text-xs font-extrabold tracking-widest text-black uppercase transition-all hover:brightness-110"
               >
                 <LogIn className="size-4" />
-                <span className="hidden sm:inline">Entrar</span>
+                <span className="hidden sm:inline">{dict.nav.signIn}</span>
               </Link>
             )}
 
@@ -178,7 +189,7 @@ export function SiteHeader({
               type="button"
               onClick={() => setMenuOpen(true)}
               className="flex size-9 items-center justify-center rounded-lg border border-line-strong text-muted transition-colors hover:text-fg xl:hidden"
-              aria-label="Abrir menu"
+              aria-label={dict.nav.openMenu}
             >
               <Menu className="size-4.5" />
             </button>
@@ -206,12 +217,12 @@ export function SiteHeader({
               className="absolute inset-y-0 right-0 flex w-[min(20rem,85vw)] flex-col border-l border-line bg-bg-elevated"
             >
               <div className="flex h-16 items-center justify-between border-b border-line px-4">
-                <span className="text-sm font-bold tracking-widest text-muted uppercase">Menu</span>
+                <span className="text-sm font-bold tracking-widest text-muted uppercase">{dict.nav.menu}</span>
                 <button
                   type="button"
                   onClick={() => setMenuOpen(false)}
                   className="rounded-lg p-2 text-muted transition-colors hover:bg-surface-2 hover:text-fg"
-                  aria-label="Fechar menu"
+                  aria-label={dict.nav.closeMenu}
                 >
                   <X className="size-4" />
                 </button>
@@ -238,7 +249,7 @@ export function SiteHeader({
                       )}
                     >
                       <Icon className="size-4.5" />
-                      {item.label}
+                      {dict.nav[item.key]}
                     </Link>
                   );
                 })}

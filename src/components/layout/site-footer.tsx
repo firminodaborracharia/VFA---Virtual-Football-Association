@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { NAV_ITEMS } from '@/lib/nav';
 import { DEFAULT_CREST } from '@/lib/utils';
 
@@ -7,10 +8,12 @@ export function SiteFooter({
   siteName,
   fullName,
   discordUrl,
+  dict,
 }: {
   siteName: string;
   fullName: string;
   discordUrl: string | null;
+  dict: Dictionary;
 }) {
   const year = new Date().getFullYear();
   const links = NAV_ITEMS.filter((item) => !item.adminOnly);
@@ -33,7 +36,7 @@ export function SiteFooter({
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex items-center gap-2 rounded-lg border border-line-strong px-3 py-2 text-sm font-semibold text-muted transition-colors hover:border-accent/50 hover:text-accent"
               >
-                Servidor no Discord
+                {dict.footer.discord}
               </a>
             ) : null}
           </div>
@@ -45,7 +48,7 @@ export function SiteFooter({
                 href={item.href}
                 className="text-sm text-muted transition-colors hover:text-accent"
               >
-                {item.label}
+                {dict.nav[item.key]}
               </Link>
             ))}
           </nav>
@@ -53,10 +56,10 @@ export function SiteFooter({
 
         <div className="mt-10 flex flex-col gap-2 border-t border-line pt-6 text-xs text-subtle sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {year} {fullName}. Competição amadora de futebol 3v3 no Roblox.
+            © {year} {fullName}. {dict.footer.amateur}
           </p>
           <p>
-            Não afiliado à Roblox Corporation. Dados de perfil obtidos da API pública do Roblox.
+            {dict.footer.notAffiliated}
           </p>
         </div>
       </div>

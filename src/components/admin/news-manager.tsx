@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ExternalLink, Languages, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -11,7 +11,9 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Checkbox, Field, Input, Select, Textarea } from '@/components/ui/field';
 import { ConfirmModal, Modal } from '@/components/ui/modal';
+import { ImageField } from '@/components/admin/image-field';
 import { useToast } from '@/components/ui/toast';
+import { cn } from '@/lib/utils';
 import { api, fromLocalInput, toLocalInput } from '@/lib/client-api';
 import { formatDateTime } from '@/lib/utils';
 
@@ -22,6 +24,14 @@ export type AdminNews = {
   subtitle: string | null;
   excerpt: string | null;
   content: string;
+  titleEn: string | null;
+  subtitleEn: string | null;
+  excerptEn: string | null;
+  contentEn: string | null;
+  titleEs: string | null;
+  subtitleEs: string | null;
+  excerptEs: string | null;
+  contentEs: string | null;
   coverImageUrl: string | null;
   status: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED';
   isFeatured: boolean;
@@ -44,6 +54,14 @@ type FormState = {
   subtitle: string;
   excerpt: string;
   content: string;
+  titleEn: string;
+  subtitleEn: string;
+  excerptEn: string;
+  contentEn: string;
+  titleEs: string;
+  subtitleEs: string;
+  excerptEs: string;
+  contentEs: string;
   coverImageUrl: string;
   categoryId: string;
   status: AdminNews['status'];
@@ -51,11 +69,38 @@ type FormState = {
   scheduledFor: string;
 };
 
+const TRANSLATION_TABS = [
+  {
+    locale: 'en' as const,
+    label: 'English',
+    titleKey: 'titleEn' as const,
+    subtitleKey: 'subtitleEn' as const,
+    excerptKey: 'excerptEn' as const,
+    contentKey: 'contentEn' as const,
+  },
+  {
+    locale: 'es' as const,
+    label: 'Español',
+    titleKey: 'titleEs' as const,
+    subtitleKey: 'subtitleEs' as const,
+    excerptKey: 'excerptEs' as const,
+    contentKey: 'contentEs' as const,
+  },
+];
+
 const EMPTY: FormState = {
   title: '',
   subtitle: '',
   excerpt: '',
   content: '',
+  titleEn: '',
+  subtitleEn: '',
+  excerptEn: '',
+  contentEn: '',
+  titleEs: '',
+  subtitleEs: '',
+  excerptEs: '',
+  contentEs: '',
   coverImageUrl: '',
   categoryId: '',
   status: 'DRAFT',
@@ -72,6 +117,7 @@ export function NewsManager({
 }) {
   const router = useRouter();
   const toast = useToast();
+  const [activeTab, setTab] = useState<'en' | 'es'>('en');
 
   const [editing, setEditing] = useState<AdminNews | null>(null);
   const [creating, setCreating] = useState(false);
@@ -93,6 +139,14 @@ export function NewsManager({
       subtitle: article.subtitle ?? '',
       excerpt: article.excerpt ?? '',
       content: article.content,
+      titleEn: article.titleEn ?? '',
+      subtitleEn: article.subtitleEn ?? '',
+      excerptEn: article.excerptEn ?? '',
+      contentEn: article.contentEn ?? '',
+      titleEs: article.titleEs ?? '',
+      subtitleEs: article.subtitleEs ?? '',
+      excerptEs: article.excerptEs ?? '',
+      contentEs: article.contentEs ?? '',
       coverImageUrl: article.coverImageUrl ?? '',
       categoryId: article.categoryId ?? '',
       status: article.status,
@@ -121,6 +175,14 @@ export function NewsManager({
       subtitle: form.subtitle.trim() || null,
       excerpt: form.excerpt.trim() || null,
       content: form.content,
+      titleEn: form.titleEn.trim() || null,
+      subtitleEn: form.subtitleEn.trim() || null,
+      excerptEn: form.excerptEn.trim() || null,
+      contentEn: form.contentEn.trim() || null,
+      titleEs: form.titleEs.trim() || null,
+      subtitleEs: form.subtitleEs.trim() || null,
+      excerptEs: form.excerptEs.trim() || null,
+      contentEs: form.contentEs.trim() || null,
       coverImageUrl: form.coverImageUrl.trim() || null,
       categoryId: form.categoryId || null,
       status,
@@ -293,13 +355,14 @@ export function NewsManager({
               </Select>
             </Field>
 
-            <Field label="Imagem de capa (URL)" error={errors.coverImageUrl}>
-              <Input
-                value={form.coverImageUrl}
-                onChange={(event) => setForm({ ...form, coverImageUrl: event.target.value })}
-                placeholder="https://…/capa.jpg"
-              />
-            </Field>
+            <ImageField
+              label="Imagem de capa"
+              value={form.coverImageUrl}
+              onChange={(coverImageUrl) => setForm({ ...form, coverImageUrl })}
+              folder="noticias"
+              error={errors.coverImageUrl}
+              hint="Envie um arquivo do computador ou cole o endereço de uma imagem."
+            />
           </div>
 
           <Field
@@ -320,6 +383,95 @@ export function NewsManager({
               onChange={(html) => setForm({ ...form, content: html })}
             />
           </Field>
+
+          {/*
+            ══════════ TRADUÇÕES ══════════
+
+            Abas, e não três formulários empilhados. Empilhado, o editor
+            ficaria três vezes mais longo e daria a impressão de que traduzir é
+            obrigatório — quando é opcional, e o normal é publicar só em
+            português. As abas deixam o caminho principal curto e a tradução
+            a um clique de distância.
+          */}
+          <div className="border-t border-line pt-4">
+            <div className="mb-3 flex items-center gap-2">
+              <Languages className="size-4 text-accent" />
+              <h3 className="text-xs font-extrabold tracking-[0.14em] text-muted uppercase">
+                Traduções
+              </h3>
+              <span className="text-xs text-subtle">
+                opcional — sem preencher, a matéria aparece em português
+              </span>
+            </div>
+
+            <div className="mb-4 flex gap-1">
+              {TRANSLATION_TABS.map((tab) => {
+                const filled = Boolean(form[tab.titleKey].trim());
+                return (
+                  <button
+                    key={tab.locale}
+                    type="button"
+                    onClick={() => setTab(tab.locale)}
+                    className={cn(
+                      'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors',
+                      tab.locale === activeTab
+                        ? 'glass-accent'
+                        : 'text-muted hover:bg-fg/8 hover:text-fg',
+                    )}
+                  >
+                    {tab.label}
+                    {/* Ponto verde = já tem título traduzido. Sem isso, saber
+                        o que falta exigiria abrir aba por aba. */}
+                    <span
+                      className={cn(
+                        'size-1.5 rounded-full',
+                        filled ? 'bg-accent' : 'bg-line-strong',
+                      )}
+                      aria-label={filled ? 'traduzido' : 'não traduzido'}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {TRANSLATION_TABS.filter((tab) => tab.locale === activeTab).map((tab) => (
+              <div key={tab.locale} className="space-y-4">
+                <Field label={`Título (${tab.label})`}>
+                  <Input
+                    value={form[tab.titleKey]}
+                    onChange={(event) => setForm({ ...form, [tab.titleKey]: event.target.value })}
+                    placeholder={form.title}
+                  />
+                </Field>
+
+                <Field label={`Subtítulo (${tab.label})`}>
+                  <Input
+                    value={form[tab.subtitleKey]}
+                    onChange={(event) =>
+                      setForm({ ...form, [tab.subtitleKey]: event.target.value })
+                    }
+                  />
+                </Field>
+
+                <Field label={`Resumo (${tab.label})`}>
+                  <Textarea
+                    value={form[tab.excerptKey]}
+                    onChange={(event) =>
+                      setForm({ ...form, [tab.excerptKey]: event.target.value })
+                    }
+                    rows={2}
+                  />
+                </Field>
+
+                <Field label={`Conteúdo (${tab.label})`}>
+                  <RichTextEditor
+                    value={form[tab.contentKey]}
+                    onChange={(html) => setForm({ ...form, [tab.contentKey]: html })}
+                  />
+                </Field>
+              </div>
+            ))}
+          </div>
 
           <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
             <Field label="Agendar publicação" error={errors.scheduledFor}>

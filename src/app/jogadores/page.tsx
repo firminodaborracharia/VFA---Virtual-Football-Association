@@ -1,3 +1,4 @@
+import { getDictionary } from '@/lib/i18n';
 import { Users } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -22,6 +23,7 @@ export default async function PlayersPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = await getDictionary();
   const params = await searchParams;
   const read = (key: string) => {
     const value = params[key];
@@ -48,8 +50,8 @@ export default async function PlayersPage({
   return (
     <>
       <PageHeader
-        eyebrow="Elenco da liga"
-        title="Jogadores"
+        eyebrow={dict.pages.playersEyebrow}
+        title={dict.pages.playersTitle}
         description={`${total} ${total === 1 ? 'jogador registrado' : 'jogadores registrados'} na VFA.`}
       />
 

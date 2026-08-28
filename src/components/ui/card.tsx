@@ -19,10 +19,15 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-2xl border transition-all duration-300',
-        variant === 'default' && 'border-line bg-surface shadow-card',
-        variant === 'glass' && 'border-white/10 bg-white/5 backdrop-blur-xl',
-        variant === 'flat' && 'border-line bg-surface-2',
+        'rounded-2xl transition-all duration-300',
+        // O cartão padrão passou a ser de vidro. O fundo do site tem refletor
+        // e faixas de gramado, e é isso que a translucidez revela — a mesma
+        // classe sobre um fundo chapado não teria efeito nenhum.
+        variant === 'default' && 'glass',
+        variant === 'glass' && 'glass',
+        // `flat` é a variante para conteúdo denso: tabela, lista longa, texto
+        // miúdo. Ali o vidro atrapalha a leitura em vez de ajudar.
+        variant === 'flat' && 'glass-solid',
         interactive &&
           'hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop motion-reduce:hover:translate-y-0',
         className,

@@ -1,3 +1,4 @@
+import { getDictionary } from '@/lib/i18n';
 import { Trophy } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -25,6 +26,7 @@ export default async function ClubsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = await getDictionary();
   const params = await searchParams;
   const read = (key: string) => {
     const value = params[key];
@@ -63,8 +65,8 @@ export default async function ClubsPage({
   return (
     <>
       <PageHeader
-        eyebrow="Times da liga"
-        title="Clubes"
+        eyebrow={dict.pages.clubsEyebrow}
+        title={dict.pages.clubsTitle}
         description={`${clubs.length} ${clubs.length === 1 ? 'clube' : 'clubes'} distribuídos em ${leagues.length} ${leagues.length === 1 ? 'liga' : 'ligas'}.`}
       />
 

@@ -1,3 +1,4 @@
+import { getDictionary } from '@/lib/i18n';
 import { BarChart3 } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -77,6 +78,7 @@ export default async function StatisticsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = await getDictionary();
   const params = await searchParams;
   const read = (key: string) => {
     const value = params[key];
@@ -93,7 +95,7 @@ export default async function StatisticsPage({
   if (!season) {
     return (
       <>
-        <PageHeader title="Estatísticas" eyebrow="Rankings" />
+        <PageHeader title={dict.pages.statsTitle} eyebrow={dict.pages.statsEyebrow} />
         <div className="container-vfa py-10">
           <EmptyState
             icon={<BarChart3 className="size-6" />}
@@ -128,7 +130,7 @@ export default async function StatisticsPage({
     <>
       <PageHeader
         eyebrow={season.name}
-        title="Estatísticas"
+        title={dict.pages.statsTitle}
         description="Rankings individuais da temporada. Use os filtros para recortar por liga, competição ou clube."
       />
 

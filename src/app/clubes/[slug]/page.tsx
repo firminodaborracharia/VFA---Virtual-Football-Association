@@ -11,6 +11,7 @@ import { Card, StatTile } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Tabs } from '@/components/ui/tabs';
 import { parseConfig } from '@/lib/engine/config';
+import { getDictionary } from '@/lib/i18n';
 import {
   getActiveSeason,
   getClubBySlug,
@@ -42,6 +43,7 @@ export async function generateMetadata({
 }
 
 export default async function ClubPage({ params }: { params: Promise<{ slug: string }> }) {
+  const dict = await getDictionary();
   const { slug } = await params;
   const [club, season] = await Promise.all([getClubBySlug(slug), getActiveSeason()]);
 
@@ -274,6 +276,7 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
               label: 'Tabela da liga',
               content: (
                 <StandingsTable
+                  dict={dict}
                   rows={standings}
                   zones={zones}
                   highlightClubId={club.id}

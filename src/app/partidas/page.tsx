@@ -1,3 +1,4 @@
+import { getDictionary } from '@/lib/i18n';
 import { CalendarDays } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -39,6 +40,7 @@ export default async function MatchesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = await getDictionary();
   const params = await searchParams;
   const read = (key: string) => {
     const value = params[key];
@@ -83,8 +85,8 @@ export default async function MatchesPage({
   return (
     <>
       <PageHeader
-        eyebrow={season?.name ?? 'Central de jogos'}
-        title="Partidas"
+        eyebrow={season?.name ?? dict.pages.matchesEyebrow}
+        title={dict.pages.matchesTitle}
         description="Todos os confrontos da VFA, com filtros por liga, competição, clube e temporada."
       />
 

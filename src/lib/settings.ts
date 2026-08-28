@@ -57,27 +57,48 @@ export const robloxSchema = z.object({
   enabled: z.boolean().default(true),
 });
 
+/**
+ * Disco no canto da tela.
+ *
+ * O arquivo de áudio NÃO vem no projeto: música tem dono, e empacotar uma
+ * faixa comercial junto do código transformaria cada deploy numa cópia não
+ * autorizada. Aqui fica só o endereço — aponte para um arquivo que você tem
+ * direito de usar, seja em `public/audio/` ou num link externo.
+ */
+export const audioSchema = z.object({
+  /** Mostra ou esconde o disco. */
+  enabled: z.boolean().default(true),
+  /** Endereço do arquivo (`/audio/tema.mp3` ou uma URL completa). */
+  url: z.string().default(''),
+  title: z.string().default(''),
+  artist: z.string().default(''),
+});
+
 export const SETTING_SCHEMAS = {
   brand: brandSchema,
   site: siteSchema,
   roblox: robloxSchema,
+  audio: audioSchema,
 } as const;
 
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
 export type Brand = z.infer<typeof brandSchema>;
 export type SiteSettings = z.infer<typeof siteSchema>;
 export type RobloxSettings = z.infer<typeof robloxSchema>;
+export type AudioSettings = z.infer<typeof audioSchema>;
 
 export type Settings = {
   brand: Brand;
   site: SiteSettings;
   roblox: RobloxSettings;
+  audio: AudioSettings;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   brand: brandSchema.parse({}),
   site: siteSchema.parse({}),
   roblox: robloxSchema.parse({}),
+  audio: audioSchema.parse({}),
 };
 
 async function loadSettings(): Promise<Settings> {

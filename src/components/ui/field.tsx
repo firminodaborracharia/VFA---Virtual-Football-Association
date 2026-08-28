@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 const controlBase =
-  'w-full rounded-xl border border-line-strong bg-surface-2 px-3 text-sm text-fg placeholder:text-subtle ' +
+  'w-full rounded-xl glass-button px-3 text-sm text-fg placeholder:text-subtle ' +
   'transition-colors focus:border-accent/60 focus:outline-none disabled:opacity-50';
 
 export function Field({

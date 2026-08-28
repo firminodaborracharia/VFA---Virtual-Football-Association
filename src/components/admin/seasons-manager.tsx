@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Field, Input } from '@/components/ui/field';
 import { Modal } from '@/components/ui/modal';
+import { ImageField } from '@/components/admin/image-field';
 import { useToast } from '@/components/ui/toast';
 import { api } from '@/lib/client-api';
 import { formatDate } from '@/lib/utils';
@@ -167,13 +168,14 @@ export function SeasonsManager({ seasons }: { seasons: AdminSeason[] }) {
             />
           </Field>
 
-          <Field label="Banner (URL)" error={errors.bannerUrl}>
-            <Input
-              value={form.bannerUrl}
-              onChange={(event) => setForm({ ...form, bannerUrl: event.target.value })}
-              placeholder="https://…/banner.jpg"
-            />
-          </Field>
+          <ImageField
+            label="Banner da temporada"
+            value={form.bannerUrl}
+            onChange={(bannerUrl) => setForm({ ...form, bannerUrl })}
+            folder="temporadas"
+            error={errors.bannerUrl}
+            hint="Aparece atrás do título na página inicial."
+          />
         </div>
       </Modal>
     </div>

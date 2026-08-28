@@ -274,6 +274,84 @@ body::after {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   Vidro
+
+   Uma superfície translúcida só parece vidro se houver o que ver atrás
+   dela. O fundo do site tem refletor e faixas de gramado justamente por
+   isso — sem essa textura, translucidez vira apenas um cinza mais claro.
+
+   O desfoque é o que garante a leitura: sem `backdrop-filter`, o texto
+   disputa espaço com o que passa por baixo. Onde o navegador não suportar
+   desfoque, o `@supports` no fim devolve fundo sólido — degradar para
+   opaco é preferível a entregar texto sobre ruído.
+   ══════════════════════════════════════════════════════════════ */
+
+/**
+ * O preenchimento é um véu CLARO, não a cor de superfície diluída.
+ *
+ * A primeira tentativa usava `--vfa-surface` com transparência. Sobre um fundo
+ * quase preto isso não produz vidro nenhum: escuro diluído em escuro continua
+ * escuro, e o card fica indistinguível da página. Vidro sobre fundo escuro se
+ * faz com um véu claro por cima — é o brilho da superfície que denuncia que
+ * existe um painel ali.
+ */
+@utility glass {
+  background-color: color-mix(in oklab, var(--vfa-fg) 5%, transparent);
+  backdrop-filter: blur(22px) saturate(1.6);
+  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+  border: 1px solid color-mix(in oklab, var(--vfa-fg) 14%, transparent);
+  /* O brilho na aresta superior é o que dá a impressão de espessura: sem ele,
+     o painel parece um retângulo pintado, não uma placa de vidro. */
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, var(--vfa-fg) 14%, transparent),
+    var(--vfa-shadow);
+}
+
+/**
+ * Variante para blocos de texto pequeno e denso — tabelas, listas longas.
+ *
+ * Continua translúcida, e bem mais do que antes: a leitura aqui é sustentada
+ * pelo desfoque forte, não pela opacidade. Desfocar bastante remove o
+ * contraste local do que passa por trás, e é isso que impede o texto de 12px
+ * de disputar espaço com o fundo.
+ */
+@utility glass-solid {
+  background-color: color-mix(in oklab, var(--vfa-surface) 62%, transparent);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border: 1px solid color-mix(in oklab, var(--vfa-fg) 12%, transparent);
+}
+
+/** Botão de vidro: contorno visível, preenchimento quase ausente. */
+@utility glass-button {
+  background-color: color-mix(in oklab, var(--vfa-fg) 6%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border: 1px solid color-mix(in oklab, var(--vfa-fg) 16%, transparent);
+}
+
+/** Botão de vidro na cor da marca — o principal da página. */
+@utility glass-accent {
+  background-color: color-mix(in oklab, var(--vfa-accent) 16%, transparent);
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  border: 1px solid color-mix(in oklab, var(--vfa-accent) 45%, transparent);
+  color: var(--vfa-accent);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-solid,
+  .glass-button,
+  .glass-accent {
+    background-color: var(--vfa-surface);
+  }
+  .glass-accent {
+    background-color: color-mix(in oklab, var(--vfa-accent) 20%, var(--vfa-surface));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
    Tipografia de competição
 
    O que separa um site de liga de um painel administrativo quase nunca é a
@@ -499,6 +577,21 @@ body::after {
 
 @utility animate-pulse-live {
   animation: vfa-pulse-live 1.4s ease-in-out infinite;
+}
+
+/* Rotação do disco: 33⅓ RPM tocando, bem mais devagar em repouso. */
+@keyframes vfa-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility animate-vinyl {
+  animation: vfa-spin 1.8s linear infinite;
+}
+
+@utility animate-vinyl-slow {
+  animation-duration: 9s;
 }
 
 /* Esqueleto de carregamento. */

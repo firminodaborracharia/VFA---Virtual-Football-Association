@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, Input, Select } from '@/components/ui/field';
 import { ConfirmModal, Modal } from '@/components/ui/modal';
+import { ImageField } from '@/components/admin/image-field';
 import { useToast } from '@/components/ui/toast';
 import { api } from '@/lib/client-api';
 
@@ -315,17 +316,14 @@ export function ClubsManager({
             </Field>
           </div>
 
-          <Field
-            label="URL do escudo"
+          <ImageField
+            label="Escudo do clube"
+            value={form.logoUrl}
+            onChange={(logoUrl) => setForm({ ...form, logoUrl })}
+            folder="clubes"
             error={errors.logoUrl}
-            hint="Link direto para a imagem (PNG ou SVG). Deixe vazio para usar a sigla."
-          >
-            <Input
-              value={form.logoUrl}
-              onChange={(event) => setForm({ ...form, logoUrl: event.target.value })}
-              placeholder="https://…/escudo.png"
-            />
-          </Field>
+            hint="Envie um arquivo ou cole um endereço. Vazio usa a sigla do clube."
+          />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Cor principal" error={errors.primaryColor}>
