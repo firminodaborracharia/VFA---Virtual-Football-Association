@@ -17,26 +17,33 @@ import { appSettings } from '@/db/schema';
    As cores viram CSS variables no <html>, então trocar a paleta da VFA é
    editar aqui (ou pelo painel) — nenhum componente tem cor fixa.          */
 
+/**
+ * Os padrões abaixo são as cores do escudo da VFA, lidas da própria imagem:
+ * o verde-menta do anel, o preto do campo e o branco do monograma. Precisam
+ * bater com o bloco `:root` de globals.css — quando a tabela `app_settings`
+ * está vazia, é daqui que sai a identidade.
+ */
 export const brandSchema = z.object({
-  /** Cor de destaque principal. */
-  accent: z.string().default('#00e08f'),
+  /** Cor de destaque principal — o menta do anel do escudo. */
+  accent: z.string().default('#9ff2d8'),
   /** Cor de apoio, usada em gradientes e estados ativos. */
-  accentAlt: z.string().default('#1e6bff'),
+  accentAlt: z.string().default('#3ecfa8'),
   /** Fundo base do modo escuro. */
-  background: z.string().default('#070b12'),
+  background: z.string().default('#040807'),
   /** Fundo dos cards. */
-  surface: z.string().default('#0e141f'),
+  surface: z.string().default('#0a1210'),
   /** Cor de texto principal. */
-  foreground: z.string().default('#e9eef7'),
+  foreground: z.string().default('#eef6f3'),
   /** Cor da borda padrão. */
-  border: z.string().default('#1c2534'),
+  border: z.string().default('#1a2723'),
 });
 
 export const siteSchema = z.object({
   name: z.string().default('VFA'),
   fullName: z.string().default('Virtual Football Association'),
   tagline: z.string().default('Os melhores clubes de futebol 3v3 do Roblox.'),
-  logoUrl: z.string().nullable().default(null),
+  /** O escudo entra pela pasta `public`; troque pelo painel se mudar a arte. */
+  logoUrl: z.string().nullable().default('/vfa-logo.webp'),
   description: z
     .string()
     .default('Site oficial da VFA — resultados, tabelas, estatísticas e notícias.'),

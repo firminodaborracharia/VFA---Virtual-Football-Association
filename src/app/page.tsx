@@ -164,6 +164,42 @@ export default async function HomePage() {
       <div className="container-vfa space-y-12 py-10">
         {hasDemoData ? <DemoNotice /> : null}
 
+        {/*
+          ══════════ NOTÍCIAS ══════════
+
+          Primeira seção da home, e não a última como estava.
+
+          Site de liga é veículo antes de ser banco de dados: quem chega quer
+          saber o que aconteceu, e tabela e calendário estão a um clique no
+          menu. Notícia no rodapé é notícia que ninguém lê — e, pior, deixa a
+          home idêntica em todos os dias em que nenhum jogo acontece.
+        */}
+        <section>
+          <SectionTitle
+            title={`${settings.site.name} News`}
+            href="/noticias"
+            linkLabel="Todas as notícias"
+          />
+          {featuredArticle ? (
+            <div className="space-y-4">
+              <NewsCard article={featuredArticle} featured />
+              {otherNews.length > 0 ? (
+                <div className="stagger grid gap-4 sm:grid-cols-3">
+                  {otherNews.map((article) => (
+                    <NewsCard key={article.id} article={article} />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Newspaper className="size-6" />}
+              title="Nenhuma notícia publicada"
+              description="As matérias da VFA News aparecem aqui depois de publicadas no painel."
+            />
+          )}
+        </section>
+
         {/* ══════════ PRÓXIMA PARTIDA + DESTAQUES ══════════ */}
         <section className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
@@ -332,28 +368,6 @@ export default async function HomePage() {
           </section>
         ) : null}
 
-        {/* ══════════ NOTÍCIAS ══════════ */}
-        <section>
-          <SectionTitle title={`${settings.site.name} News`} href="/noticias" linkLabel="Todas as notícias" />
-          {featuredArticle ? (
-            <div className="space-y-4">
-              <NewsCard article={featuredArticle} featured />
-              {otherNews.length > 0 ? (
-                <div className="stagger grid gap-4 sm:grid-cols-3">
-                  {otherNews.map((article) => (
-                    <NewsCard key={article.id} article={article} />
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <EmptyState
-              icon={<Newspaper className="size-6" />}
-              title="Nenhuma notícia publicada"
-              description="As matérias da VFA News aparecem aqui depois de publicadas no painel."
-            />
-          )}
-        </section>
       </div>
     </>
   );

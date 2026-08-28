@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { NAV_ITEMS } from '@/lib/nav';
+import { DEFAULT_CREST } from '@/lib/utils';
 
 export function SiteFooter({
   siteName,
@@ -19,11 +20,10 @@ export function SiteFooter({
       <div className="container-vfa py-10">
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-alt text-sm font-black text-black">
-                {siteName.slice(0, 3).toUpperCase()}
-              </span>
-              <span className="text-lg font-black tracking-tight">{siteName}</span>
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={DEFAULT_CREST} alt="" className="size-11 object-contain" />
+              <span className="display-vfa text-lg">{siteName}</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted">{fullName}</p>
             {discordUrl ? (

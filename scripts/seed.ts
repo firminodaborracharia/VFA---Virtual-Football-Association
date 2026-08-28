@@ -191,15 +191,25 @@ const NICKNAMES = [
 
 const POSITIONS = ['GOALKEEPER', 'DEFENDER', 'MIDFIELDER', 'FORWARD'] as const;
 
+/**
+ * As cores das editorias saem da mesma família do escudo — do menta claro ao
+ * verde-petróleo, mais um cinza-azulado neutro no fim.
+ *
+ * Antes era um arco-íris (azul, roxo, laranja, rosa). Cada etiqueta ficava
+ * bonita sozinha e o conjunto brigava com a identidade: numa home com quatro
+ * notícias lado a lado, apareciam quatro cores que não têm nada a ver com a
+ * VFA. Variação de matiz aqui é ruído; variação de luminosidade dentro da
+ * matiz da marca distingue as editorias sem competir com ela.
+ */
 const NEWS_CATEGORIES = [
-  { name: 'VFA', color: '#00e08f', sortOrder: 1 },
-  { name: 'Transferências', color: '#1e6bff', sortOrder: 2 },
-  { name: 'Clubes', color: '#7e57c2', sortOrder: 3 },
-  { name: 'Jogadores', color: '#26a69a', sortOrder: 4 },
-  { name: 'Competições', color: '#ffb703', sortOrder: 5 },
-  { name: 'Mercado', color: '#ef6c00', sortOrder: 6 },
-  { name: 'Resultados', color: '#ec407a', sortOrder: 7 },
-  { name: 'Comunicados oficiais', color: '#90a4ae', sortOrder: 8 },
+  { name: 'VFA', color: '#9ff2d8', sortOrder: 1 },
+  { name: 'Transferências', color: '#6fe3c4', sortOrder: 2 },
+  { name: 'Clubes', color: '#4fd6b2', sortOrder: 3 },
+  { name: 'Jogadores', color: '#3ecfa8', sortOrder: 4 },
+  { name: 'Competições', color: '#2fb894', sortOrder: 5 },
+  { name: 'Mercado', color: '#27a082', sortOrder: 6 },
+  { name: 'Resultados', color: '#1f8a70', sortOrder: 7 },
+  { name: 'Comunicados oficiais', color: '#8fa39c', sortOrder: 8 },
 ];
 
 /* ── Execução ──────────────────────────────────────────────── */
@@ -679,7 +689,23 @@ async function main() {
           sortOrder: category.sortOrder,
         })),
       )
-      .onConflictDoNothing()
+      /**
+       * Atualiza em vez de ignorar.
+       *
+       * Com `onConflictDoNothing`, uma editoria criada num seed antigo ficava
+       * congelada com a cor antiga para sempre: rodar o seed de novo depois de
+       * mudar a paleta não surtia efeito nenhum, e a home continuava exibindo
+       * etiquetas fora da identidade. Como o seed é uma ação de demonstração,
+       * e não de produção, sobrescrever é o comportamento esperado.
+       */
+      .onConflictDoUpdate({
+        target: newsCategories.slug,
+        set: {
+          name: sql`excluded.name`,
+          color: sql`excluded.color`,
+          sortOrder: sql`excluded.sort_order`,
+        },
+      })
       .returning();
 
     const allCategories =

@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { GlobalSearch } from '@/components/layout/global-search';
 import { UserMenu } from '@/components/layout/user-menu';
 import { isActivePath, NAV_ITEMS } from '@/lib/nav';
-import { cn } from '@/lib/utils';
+import { cn, DEFAULT_CREST } from '@/lib/utils';
 
 export type HeaderUser = {
   name: string | null;
@@ -33,6 +33,16 @@ export function SiteHeader({
   const [scrolled, setScrolled] = useState(false);
 
   const items = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'ADMIN');
+
+  /**
+   * O escudo da VFA vem junto do projeto (`public/vfa-logo.webp`), então ele é
+   * o padrão — não o desenho genérico de sigla.
+   *
+   * A configuração do banco continua ganhando: quem trocar a arte pelo painel
+   * vê a nova imagem. Este `??` só cobre o caso de o campo nunca ter sido
+   * preenchido, que é a situação de qualquer instalação recém-criada.
+   */
+  const crest = logoUrl ?? DEFAULT_CREST;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -80,9 +90,9 @@ export function SiteHeader({
 
         <div className="container-vfa flex h-16 items-center gap-3">
           <Link href="/" className="flex shrink-0 items-center gap-3" aria-label={siteName}>
-            {logoUrl ? (
+            {crest ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={siteName} className="size-9 rounded object-contain" />
+              <img src={crest} alt={siteName} className="size-10 object-contain" />
             ) : (
               /* Escudo: canto cortado na diagonal e sigla inclinada. */
               <span

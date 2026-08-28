@@ -11,32 +11,52 @@
    ══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Marca ── */
-  --vfa-accent: #00e08f;
-  --vfa-accent-alt: #1e6bff;
-  --vfa-accent-warm: #ffb703;
+  /**
+   * ── Marca ──
+   *
+   * Cores tiradas diretamente do escudo da VFA: o anel verde-menta, o campo
+   * preto e o branco do monograma. São só três, e é por isso que funcionam —
+   * paleta enxuta é o que faz uma identidade parecer identidade, e não um tema
+   * de painel com uma cor de destaque qualquer.
+   *
+   * `accent-alt` não é uma quarta cor: é a menta empurrada para um verde mais
+   * fundo, na mesma matiz (~163°). Serve para gradientes e estados ativos sem
+   * introduzir um azul estranho ao escudo, como havia antes.
+   */
+  --vfa-accent: #9ff2d8;
+  --vfa-accent-alt: #3ecfa8;
+  --vfa-accent-warm: #ffc247;
 
-  /* ── Superfícies (modo escuro é o padrão do site) ── */
-  --vfa-bg: #070b12;
-  --vfa-bg-elevated: #0a1019;
-  --vfa-surface: #0e141f;
-  --vfa-surface-2: #141c2b;
-  --vfa-surface-3: #1b2536;
+  /**
+   * ── Superfícies ──
+   *
+   * O escudo é preto puro, mas uma página inteira em #000 cansa a vista e
+   * apaga toda hierarquia: não sobra para onde as bordas e os cards irem. A
+   * base aqui é um quase-preto com um traço da matiz da menta, e cada degrau
+   * sobe pouco. O resultado lê como preto e ainda deixa camadas visíveis.
+   */
+  --vfa-bg: #040807;
+  --vfa-bg-elevated: #070d0b;
+  --vfa-surface: #0a1210;
+  --vfa-surface-2: #101a17;
+  --vfa-surface-3: #17231f;
 
   /* ── Texto ── */
-  --vfa-fg: #e9eef7;
-  --vfa-fg-muted: #8b98ad;
-  --vfa-fg-subtle: #5d6b81;
+  --vfa-fg: #eef6f3;
+  --vfa-fg-muted: #8fa39c;
+  --vfa-fg-subtle: #5f736c;
 
   /* ── Traços ── */
-  --vfa-border: #1c2534;
-  --vfa-border-strong: #2a3648;
+  --vfa-border: #1a2723;
+  --vfa-border-strong: #2a3b35;
 
-  /* ── Semânticas ── */
-  --vfa-win: #22c55e;
-  --vfa-draw: #94a3b8;
-  --vfa-loss: #ef4444;
-  --vfa-live: #ff3b3b;
+  /* ── Semânticas ──
+     Vitória e derrota NÃO usam a menta: se a cor da marca também significasse
+     "vitória", a tabela viraria um borrão verde e o destaque perderia função. */
+  --vfa-win: #3ecfa8;
+  --vfa-draw: #8fa39c;
+  --vfa-loss: #f4645d;
+  --vfa-live: #ff4d45;
 
   /* ── Sombras e curvas ── */
   --vfa-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -64,16 +84,21 @@
 /* Modo claro: existe, mas o escuro é o padrão deliberado do site.
    Só é aplicado quando o usuário escolhe explicitamente. */
 [data-theme='light'] {
-  --vfa-bg: #f5f7fb;
+  --vfa-bg: #f4f8f6;
   --vfa-bg-elevated: #ffffff;
   --vfa-surface: #ffffff;
-  --vfa-surface-2: #f1f4f9;
-  --vfa-surface-3: #e6ebf3;
-  --vfa-fg: #0d1420;
-  --vfa-fg-muted: #55627a;
-  --vfa-fg-subtle: #8794a9;
-  --vfa-border: #dfe5ee;
-  --vfa-border-strong: #c6d0de;
+  --vfa-surface-2: #eef4f1;
+  --vfa-surface-3: #e2ebe7;
+  --vfa-fg: #0a1210;
+  --vfa-fg-muted: #4d5f59;
+  --vfa-fg-subtle: #7d8f89;
+  --vfa-border: #dbe6e1;
+  --vfa-border-strong: #c1d1cb;
+  /* No claro a menta do escudo some no branco; aqui o destaque é o verde
+     fundo da mesma matiz, que mantém o parentesco com a marca e continua
+     legível sobre fundo claro. */
+  --vfa-accent: #17997a;
+  --vfa-accent-alt: #0f7a61;
   --vfa-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
   --vfa-shadow: 0 4px 24px -6px rgb(15 23 42 / 0.12);
   --vfa-shadow-lg: 0 24px 60px -20px rgb(15 23 42 / 0.2);

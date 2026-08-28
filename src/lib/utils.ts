@@ -170,3 +170,6 @@ export function clamp(value: number, min: number, max: number): number {
 export function pluralize(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;
 }
+
+/** Escudo da VFA empacotado com o projeto (public/vfa-logo.webp). */
+export const DEFAULT_CREST = '/vfa-logo.webp';
