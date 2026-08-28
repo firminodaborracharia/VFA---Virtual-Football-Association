@@ -115,7 +115,7 @@ export default async function NewsArticlePage({
 
       {others.length > 0 ? (
         <section className="container-vfa border-t border-line py-10">
-          <h2 className="mb-5 text-lg font-black tracking-tight">Leia também</h2>
+          <h2 className="display-vfa mb-5 text-lg">Leia também</h2>
           <div className="stagger grid gap-5 sm:grid-cols-3">
             {others.map((item) => (
               <NewsCard key={item.id} article={item} />

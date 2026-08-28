@@ -83,7 +83,7 @@ export default async function HighlightsPage() {
             {/* ══════════ CRAQUE DA TEMPORADA ══════════ */}
             {mvp ? (
               <section>
-                <h2 className="mb-4 text-lg font-black tracking-tight">Melhor jogador da temporada</h2>
+                <h2 className="display-vfa mb-4 text-lg">Melhor jogador da temporada</h2>
 
                 <div className="sheen relative overflow-hidden rounded-3xl border border-accent/30 bg-gradient-to-br from-accent/10 via-surface to-surface p-6 sm:p-10">
                   <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">

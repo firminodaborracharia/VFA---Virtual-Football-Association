@@ -99,7 +99,7 @@ export default async function CompetitionsPage({
         ) : (
           grouped.map((group) => (
             <section key={group.type}>
-              <h2 className="mb-4 text-lg font-black tracking-tight">
+              <h2 className="display-vfa mb-4 text-lg">
                 {COMPETITION_TYPE_LABELS[group.type]}
               </h2>
 

@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
-import { auth } from '@/auth';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader, type HeaderUser } from '@/components/layout/site-header';
 import { ToastProvider } from '@/components/ui/toast';
+import { getSession } from '@/lib/rbac';
 import { brandToCssVars, getSettings } from '@/lib/settings';
 
 import './globals.css';
@@ -46,8 +46,15 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/**
+ * O layout raiz envolve TODAS as páginas, inclusive as públicas, então nada
+ * aqui pode lançar nem pendurar. `getSession()` já garante as duas coisas —
+ * erro vira "deslogado", lentidão tem teto de tempo — e ainda compartilha a
+ * leitura com as guardas de rota via `cache()` do React, em vez de consultar
+ * o banco de novo em cada camada.
+ */
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [session, settings] = await Promise.all([auth(), getSettings()]);
+  const [session, settings] = await Promise.all([getSession(), getSettings()]);
 
   const user: HeaderUser = session?.user
     ? {
@@ -67,7 +74,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang="pt-BR" className="h-full antialiased" style={cssVars} suppressHydrationWarning>
-      <body className="flex min-h-full flex-col" suppressHydrationWarning>
+      <body className="flex min-h-full flex-col">
         <ToastProvider>
           <SiteHeader user={user} siteName={settings.site.name} logoUrl={settings.site.logoUrl} />
 

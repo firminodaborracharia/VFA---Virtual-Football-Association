@@ -94,7 +94,7 @@ export default async function ClubsPage({
                   className="h-6 w-1 rounded-full"
                   style={{ backgroundColor: league.accent ?? 'var(--vfa-accent)' }}
                 />
-                <h2 className="text-lg font-black tracking-tight">
+                <h2 className="display-vfa text-lg">
                   {league.nationFlag ? <span className="mr-2">{league.nationFlag}</span> : null}
                   {league.name}
                 </h2>

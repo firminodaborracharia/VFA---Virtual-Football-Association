@@ -89,7 +89,7 @@ export default async function AdminCompetitionsPage() {
       />
 
       <section>
-        <h2 className="mb-3 text-lg font-black tracking-tight">Zonas de classificação</h2>
+        <h2 className="display-vfa mb-3 text-lg">Zonas de classificação</h2>
         <p className="mb-4 text-sm text-muted">
           Define as faixas coloridas da tabela e para onde cada faixa classifica. É isto que faz
           &ldquo;os 4 primeiros vão à Libertadores&rdquo; funcionar sem estar escrito no código.

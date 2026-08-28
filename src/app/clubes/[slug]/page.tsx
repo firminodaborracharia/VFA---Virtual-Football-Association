@@ -150,7 +150,7 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
       <div className="container-vfa space-y-8 py-8">
         {/* ══════════ NÚMEROS ══════════ */}
         <section>
-          <h2 className="mb-4 text-lg font-black tracking-tight">
+          <h2 className="display-vfa mb-4 text-lg">
             Estatísticas {season ? `— ${season.name}` : ''}
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">

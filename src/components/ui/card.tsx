@@ -54,12 +54,17 @@ export function CardHeader({
     >
       <div className="flex min-w-0 items-center gap-3">
         {icon ? (
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-accent">
+          /* Quadrado com canto cortado, não um círculo suave: o mesmo desenho
+             do escudo no cabeçalho, repetido em escala menor. */
+          <span
+            className="flex size-9 shrink-0 items-center justify-center bg-surface-2 text-accent"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 100% 76%, 50% 100%, 0 76%)' }}
+          >
             {icon}
           </span>
         ) : null}
         <div className="min-w-0">
-          <h2 className="truncate text-sm font-semibold tracking-wide text-fg uppercase">
+          <h2 className="truncate text-[0.8rem] font-extrabold tracking-[0.1em] text-fg uppercase">
             {title}
           </h2>
           {description ? (
@@ -104,10 +109,14 @@ export function StatTile({
         className,
       )}
     >
-      <div className="text-[0.7rem] font-medium tracking-widest text-subtle uppercase">{label}</div>
+      <div className="text-[0.65rem] font-extrabold tracking-[0.16em] text-subtle uppercase">
+        {label}
+      </div>
       <div
         className={cn(
-          'mt-1 font-mono text-2xl leading-none font-bold tabular-nums',
+          // `scoreboard` em vez de fonte monoespaçada: o número fica pesado e
+          // apertado como placar, sem o ar de terminal que o mono dava.
+          'scoreboard mt-1.5 text-3xl leading-none',
           accent ? 'text-accent' : 'text-fg',
         )}
       >

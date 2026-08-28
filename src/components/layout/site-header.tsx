@@ -66,26 +66,44 @@ export function SiteHeader({
         className={cn(
           'sticky top-0 z-50 border-b transition-all duration-300',
           scrolled
-            ? 'border-line bg-bg/85 shadow-card backdrop-blur-xl'
+            ? 'border-line bg-bg/90 shadow-card backdrop-blur-xl'
             : 'border-transparent bg-bg/40 backdrop-blur-sm',
         )}
       >
+        {/* Fio de acento no topo absoluto da página. Detalhe pequeno, mas é o
+            que faz a barra ler como cabeçalho de emissora esportiva em vez de
+            barra de aplicativo. */}
+        <div
+          className="h-[3px] bg-gradient-to-r from-accent via-accent-alt to-accent"
+          aria-hidden
+        />
+
         <div className="container-vfa flex h-16 items-center gap-3">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={siteName}>
+          <Link href="/" className="flex shrink-0 items-center gap-3" aria-label={siteName}>
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={siteName} className="size-9 rounded-lg object-contain" />
+              <img src={logoUrl} alt={siteName} className="size-9 rounded object-contain" />
             ) : (
-              <span className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-alt text-sm font-black text-black">
-                {siteName.slice(0, 3).toUpperCase()}
+              /* Escudo: canto cortado na diagonal e sigla inclinada. */
+              <span
+                className="flex size-9 items-center justify-center bg-gradient-to-br from-accent to-accent-alt text-[0.8rem] text-black"
+                style={{ clipPath: 'polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%)' }}
+              >
+                <span className="scoreboard -translate-y-px skew-x-[-8deg]">
+                  {siteName.slice(0, 3).toUpperCase()}
+                </span>
               </span>
             )}
-            <span className="hidden text-lg leading-none font-black tracking-tight sm:block">
-              {siteName}
-            </span>
+            <span className="display-vfa hidden text-lg sm:block">{siteName}</span>
           </Link>
 
-          <nav className="ml-2 hidden min-w-0 flex-1 items-center gap-0.5 xl:flex">
+          {/*
+            `min-w-0` + `overflow-hidden` é obrigatório aqui: são dez itens em
+            caixa alta, e sem isso o menu empurra a busca e o botão de entrar
+            para fora da barra em telas de 1440px. Com o limite, o menu cede
+            espaço em vez de atropelar o que está à direita.
+          */}
+          <nav className="ml-3 hidden min-w-0 flex-1 items-center gap-0 overflow-hidden xl:flex">
             {items.map((item) => {
               const active = isActivePath(pathname, item.href);
               return (
@@ -93,8 +111,11 @@ export function SiteHeader({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'relative rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-                    active ? 'text-accent' : 'text-muted hover:bg-surface-2 hover:text-fg',
+                    /* Caixa alta, peso alto e entre-letras aberto: é assim que
+                       menu de site de campeonato se lê, e é o que mais afasta
+                       do visual de painel. */
+                    'relative shrink-0 px-2.5 py-2 text-[0.68rem] font-extrabold tracking-[0.09em] whitespace-nowrap uppercase transition-colors 2xl:px-3 2xl:tracking-[0.13em]',
+                    active ? 'text-fg' : 'text-muted hover:text-fg',
                     item.adminOnly && 'text-accent-warm hover:text-accent-warm',
                   )}
                 >
@@ -103,9 +124,10 @@ export function SiteHeader({
                     {item.label}
                   </span>
                   {active ? (
+                    /* Barra grossa e reta, não um traço fino arredondado. */
                     <motion.span
                       layoutId="nav-underline"
-                      className="absolute inset-x-2.5 -bottom-px h-0.5 rounded-full bg-accent"
+                      className="absolute inset-x-2 -bottom-[9px] h-[3px] bg-accent"
                       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                     />
                   ) : null}
@@ -114,16 +136,18 @@ export function SiteHeader({
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="flex h-9 items-center gap-2 rounded-lg border border-line-strong bg-surface-2 px-2.5 text-sm text-subtle transition-colors hover:border-accent/40 hover:text-fg"
+              className="flex h-9 items-center gap-2 rounded-sm border border-line-strong bg-surface-2 px-2.5 text-sm text-subtle transition-colors hover:border-accent/40 hover:text-fg"
               aria-label="Buscar no site"
             >
               <Search className="size-4" />
-              <span className="hidden lg:inline">Buscar</span>
-              <kbd className="hidden rounded border border-line px-1 font-mono text-[0.65rem] lg:inline">
+              {/* Só a partir de 2xl: entre xl e 2xl o menu já ocupa a barra
+                  inteira, e o rótulo aqui era o que empurrava tudo. */}
+              <span className="hidden 2xl:inline">Buscar</span>
+              <kbd className="hidden rounded-sm border border-line px-1 font-mono text-[0.65rem] 2xl:inline">
                 ⌘K
               </kbd>
             </button>
@@ -133,7 +157,7 @@ export function SiteHeader({
             ) : (
               <Link
                 href="/entrar"
-                className="flex h-9 items-center gap-2 rounded-lg bg-accent px-3 text-sm font-bold text-black transition-all hover:brightness-110"
+                className="flex h-9 items-center gap-2 rounded-sm bg-accent px-3.5 text-xs font-extrabold tracking-widest text-black uppercase transition-all hover:brightness-110"
               >
                 <LogIn className="size-4" />
                 <span className="hidden sm:inline">Entrar</span>

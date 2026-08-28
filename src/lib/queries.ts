@@ -9,9 +9,11 @@
 
 import { and, asc, count, desc, eq, gte, ilike, inArray, isNotNull, lte, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
+import { cache } from 'react';
 
 import { db } from '@/db';
 import {
+  clubSeasonMemberships,
   clubSeasonStats,
   clubs,
   matchAppearances,
@@ -42,12 +44,13 @@ const playersAlias = (name: string) => alias(players, name);
 
 /* ── Temporadas ────────────────────────────────────────────── */
 
-export async function getActiveSeason() {
-  const [active] = await db
-    .select()
-    .from(seasons)
-    .where(eq(seasons.isActive, true))
-    .limit(1);
+/**
+ * A temporada ativa é a primeira coisa que quase toda página pergunta, e a
+ * resposta não muda no meio de uma requisição. `cache()` do React garante uma
+ * ida ao banco por requisição em vez de uma por chamada.
+ */
+export const getActiveSeason = cache(async () => {
+  const [active] = await db.select().from(seasons).where(eq(seasons.isActive, true)).limit(1);
 
   if (active) return active;
 
@@ -55,7 +58,7 @@ export async function getActiveSeason() {
   // fica vazio só porque alguém esqueceu de ativar.
   const [latest] = await db.select().from(seasons).orderBy(desc(seasons.year)).limit(1);
   return latest ?? null;
-}
+});
 
 export async function listSeasons() {
   return db.select().from(seasons).orderBy(desc(seasons.year));
@@ -1235,3 +1238,35 @@ export async function listCompetitionsAdmin(seasonId: string) {
 
   return rows.map((row) => ({ ...row, teamIds: byCompetition.get(row.id) ?? [] }));
 }
+
+/**
+ * Números da temporada para a faixa do hero.
+ *
+ * Uma consulta só, com subselects, em vez de cinco idas ao banco: é a primeira
+ * coisa que a home renderiza e o custo precisa ser desprezível.
+ */
+export const getSeasonTotals = cache(async (seasonId: string) => {
+  const [row] = await db
+    .select({
+      clubs: sql<number>`(
+        select count(distinct ${clubSeasonMemberships.clubId})::int
+        from ${clubSeasonMemberships}
+        where ${clubSeasonMemberships.seasonId} = ${seasonId}
+      )`,
+      players: sql<number>`(select count(*)::int from ${players} where ${players.isActive} = true)`,
+      matchesPlayed: sql<number>`(
+        select count(*)::int from ${matches}
+        where ${matches.seasonId} = ${seasonId} and ${matches.status} = 'FINISHED'
+      )`,
+      goals: sql<number>`(
+        select coalesce(sum(${clubSeasonStats.goalsFor}), 0)::int
+        from ${clubSeasonStats}
+        where ${clubSeasonStats.seasonId} = ${seasonId}
+      )`,
+    })
+    .from(seasons)
+    .where(eq(seasons.id, seasonId))
+    .limit(1);
+
+  return row ?? { clubs: 0, players: 0, matchesPlayed: 0, goals: 0 };
+});

@@ -112,7 +112,7 @@ export default async function StandingsPage({
                     className="h-7 w-1 rounded-full"
                     style={{ backgroundColor: league.accent ?? 'var(--vfa-accent)' }}
                   />
-                  <h2 className="text-xl font-black tracking-tight">
+                  <h2 className="display-vfa text-xl">
                     {league.nationFlag ? <span className="mr-2">{league.nationFlag}</span> : null}
                     {league.name}
                   </h2>

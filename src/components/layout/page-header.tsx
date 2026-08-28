@@ -37,10 +37,11 @@ export function PageHeader({
           <div className="flex min-w-0 items-center gap-5">
             {media}
             <div className="min-w-0">
-              {eyebrow ? (
-                <p className="text-xs font-bold tracking-[0.2em] text-accent uppercase">{eyebrow}</p>
-              ) : null}
-              <h1 className="animate-fade-up mt-1.5 text-3xl leading-tight font-black tracking-tight sm:text-4xl lg:text-5xl">
+              {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+              {/* Mesma manchete do hero da home, em escala menor: o título de
+                  página deixa de ser texto grande e passa a ser cabeçalho de
+                  seção de campeonato. */}
+              <h1 className="display-vfa animate-fade-up mt-2 text-3xl sm:text-4xl lg:text-5xl">
                 {title}
               </h1>
               {description ? (

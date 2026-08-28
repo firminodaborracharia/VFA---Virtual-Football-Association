@@ -1,11 +1,10 @@
-import { ArrowRight, CalendarDays, Newspaper, Table2, Trophy, Users } from 'lucide-react';
+import { ArrowRight, CalendarDays, Newspaper, Table2, Trophy } from 'lucide-react';
 import Link from 'next/link';
 
 import { ClubCrest, PlayerAvatar } from '@/components/common/remote-image';
 import { DemoNotice, NewsCard } from '@/components/domain/cards';
 import { MatchCard, MatchRowItem } from '@/components/domain/match-card';
 import { StandingsTable } from '@/components/domain/standings-table';
-import { Badge } from '@/components/ui/badge';
 import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -15,6 +14,7 @@ import {
   getLeagueCompetition,
   getPlayerRanking,
   getQualificationZones,
+  getSeasonTotals,
   getStandings,
   listCompetitions,
   listLeagues,
@@ -22,7 +22,7 @@ import {
   listNews,
 } from '@/lib/queries';
 import { getSettings } from '@/lib/settings';
-import { COMPETITION_TYPE_LABELS } from '@/lib/utils';
+import { cn, COMPETITION_TYPE_LABELS } from '@/lib/utils';
 
 // Resultados e tabelas mudam a cada partida registrada; a home é sempre
 // renderizada sob demanda em vez de servida de um HTML estático desatualizado.
@@ -47,7 +47,7 @@ export default async function HomePage() {
 
   const now = new Date();
 
-  const [leagues, competitions, upcoming, recent, latestNews, topScorers, topAssists] =
+  const [leagues, competitions, upcoming, recent, latestNews, topScorers, topAssists, totals] =
     await Promise.all([
       listLeagues(),
       listCompetitions(season.id),
@@ -56,6 +56,7 @@ export default async function HomePage() {
       listNews({ limit: 4 }),
       getPlayerRanking('goals', { seasonId: season.id, limit: 1 }),
       getPlayerRanking('assists', { seasonId: season.id, limit: 1 }),
+      getSeasonTotals(season.id),
     ]);
 
   // Tabela resumida da primeira liga cadastrada.
@@ -93,24 +94,39 @@ export default async function HomePage() {
           </>
         ) : null}
 
-        <div className="container-vfa relative py-16 sm:py-24">
+        <div className="container-vfa relative py-14 sm:py-20">
           <div className="max-w-3xl">
-            <Badge tone="accent" className="animate-fade-in">
-              {season.name}
-            </Badge>
+            <span className="eyebrow animate-fade-in">{season.name}</span>
 
-            <h1 className="animate-fade-up mt-5 text-4xl leading-[0.95] font-black tracking-tight sm:text-6xl lg:text-7xl">
-              <span className="text-gradient-accent">{settings.site.name}</span>
-              <span className="text-fg"> — Temporada {season.year}</span>
+            {/*
+              O ano vem primeiro e enorme, como capa de almanaque de campeonato.
+              Antes o título era uma frase corrida em caixa mista — legível, mas
+              indistinguível de qualquer página de produto.
+            */}
+            <h1 className="animate-fade-up mt-4">
+              <span className="display-italic block text-6xl text-fg/15 sm:text-8xl lg:text-9xl">
+                {season.year}
+              </span>
+              <span className="display-vfa -mt-2 block text-4xl sm:text-6xl lg:text-7xl">
+                <span className="text-gradient-accent">{settings.site.name}</span>{' '}
+                <span className="text-fg">Temporada</span>
+              </span>
             </h1>
 
             <p
-              className="animate-fade-up mt-5 max-w-xl text-lg text-muted"
+              className="animate-fade-up mt-6 max-w-xl text-lg text-muted"
               style={{ animationDelay: '0.08s' }}
             >
               {season.tagline ?? settings.site.tagline}
             </p>
 
+            {/*
+              Dois botões, não quatro.
+
+              Jogadores e Clubes já estão no menu do topo, visíveis em toda
+              página. Repetir os quatro aqui quebrava a linha em telas médias e
+              diluía a chamada: com quatro pesos iguais, nenhum é o principal.
+            */}
             <div
               className="animate-fade-up mt-8 flex flex-wrap gap-3"
               style={{ animationDelay: '0.16s' }}
@@ -123,15 +139,24 @@ export default async function HomePage() {
                 <Table2 className="size-4.5" />
                 Ver classificação
               </ButtonLink>
-              <ButtonLink href="/jogadores" size="lg" variant="outline">
-                <Users className="size-4.5" />
-                Ver jogadores
-              </ButtonLink>
-              <ButtonLink href="/clubes" size="lg" variant="outline">
-                <Trophy className="size-4.5" />
-                Ver clubes
-              </ButtonLink>
             </div>
+          </div>
+        </div>
+
+        {/*
+          Faixa de números da temporada, encostada na base do hero.
+
+          Não é enfeite: era aqui que sobrava um vão vazio entre a manchete e o
+          conteúdo, e vão vazio é o que faz uma página parecer inacabada. Toda
+          liga de verdade abre com estes quatro números porque eles respondem,
+          numa olhada, "de que tamanho é esta competição".
+        */}
+        <div className="relative border-t border-line/60 bg-bg/40 backdrop-blur-sm">
+          <div className="container-vfa grid grid-cols-2 divide-x divide-line/60 sm:grid-cols-4">
+            <HeroStat label="Clubes" value={totals.clubs} />
+            <HeroStat label="Jogadores" value={totals.players} />
+            <HeroStat label="Partidas" value={totals.matchesPlayed} />
+            <HeroStat label="Gols" value={totals.goals} accent />
           </div>
         </div>
       </section>
@@ -344,17 +369,47 @@ function SectionTitle({
   linkLabel?: string;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-4">
-      <h2 className="text-xl font-black tracking-tight sm:text-2xl">{title}</h2>
+    <div className="mb-4 flex items-center gap-4">
+      <h2 className="display-vfa shrink-0 text-xl sm:text-2xl">{title}</h2>
+      {/* A régua ocupa a sobra da linha: o título deixa de flutuar solto e passa
+          a ter cabeçalho de seção, no espírito de página de jornal esportivo. */}
+      <span className="rule-accent" aria-hidden />
       {href ? (
         <Link
           href={href}
-          className="group flex shrink-0 items-center gap-1 text-sm font-semibold text-muted transition-colors hover:text-accent"
+          className="group flex shrink-0 items-center gap-1 text-xs font-extrabold tracking-widest text-muted uppercase transition-colors hover:text-accent"
         >
           {linkLabel ?? 'Ver mais'}
-          <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       ) : null}
+    </div>
+  );
+}
+
+/** Um número da faixa do hero. */
+function HeroStat({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: number;
+  accent?: boolean;
+}) {
+  return (
+    <div className="px-1 py-5 text-center sm:py-6">
+      <div
+        className={cn(
+          'scoreboard text-3xl leading-none sm:text-4xl',
+          accent ? 'text-accent' : 'text-fg',
+        )}
+      >
+        {value.toLocaleString('pt-BR')}
+      </div>
+      <div className="mt-2 text-[0.65rem] font-extrabold tracking-[0.18em] text-subtle uppercase">
+        {label}
+      </div>
     </div>
   );
 }

@@ -1,25 +1,26 @@
-import Image from 'next/image';
-
 import { cn, initials } from '@/lib/utils';
-
-/** Hosts que passam pelo otimizador de imagens do Next (ver next.config.ts). */
-const OPTIMIZED_HOSTS = ['tr.rbxcdn.com', 'rbxcdn.com'];
-
-function isOptimizable(url: string): boolean {
-  try {
-    const host = new URL(url).hostname;
-    return OPTIMIZED_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
-  } catch {
-    return false;
-  }
-}
 
 /**
  * Imagem remota com fallback de iniciais.
  *
- * Imagens do CDN do Roblox passam pelo otimizador; URLs livres cadastradas
- * pelo administrador usam <img> com lazy loading, para não transformar o
- * otimizador do Next num proxy aberto.
+ * ── Por que NÃO usamos o otimizador do Next aqui ──
+ *
+ * Antes, avatares do Roblox passavam por `next/image`. Isso parece uma
+ * otimização, mas o custo real é este: cada `<Image>` faz o navegador pedir
+ * `/_next/image?url=…`, e é o SERVIDOR do site que então baixa a imagem do
+ * rbxcdn.com. Numa página com 20 jogadores são 20 downloads que o servidor
+ * precisa concluir. Se o CDN do Roblox estiver lento ou bloqueado na rede de
+ * quem está rodando o projeto, essas requisições ficam pendentes e a aba do
+ * navegador gira sem parar — mesmo com o HTML já entregue e o conteúdo já
+ * visível na tela. Foi exatamente esse o sintoma de "carrega para sempre".
+ *
+ * Como as imagens em questão são escudos e avatares de 32 a 160 pixels, o
+ * ganho do otimizador é irrelevante perto do risco. Servimos direto do CDN
+ * com `loading="lazy"`: o navegador busca sozinho, em paralelo, e uma imagem
+ * que falha é só uma imagem quebrada — não uma página travada.
+ *
+ * URLs livres cadastradas pelo administrador seguem o mesmo caminho, o que de
+ * quebra evita transformar o otimizador do Next num proxy aberto de imagens.
  */
 export function RemoteImage({
   src,
@@ -57,23 +58,9 @@ export function RemoteImage({
     );
   }
 
-  if (isOptimizable(src)) {
-    return (
-      <Image
-        src={src}
-        alt={alt}
-        width={size}
-        height={size}
-        priority={priority}
-        className={shared}
-        style={{ width: size, height: size }}
-      />
-    );
-  }
-
   return (
-    // URLs livres cadastradas pelo administrador não passam pelo otimizador do
-    // Next de propósito (ver next.config.ts), então aqui é <img> mesmo.
+    // Nenhuma imagem remota passa pelo otimizador do Next — ver a nota no topo
+    // do arquivo e em next.config.ts.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
@@ -81,7 +68,9 @@ export function RemoteImage({
       width={size}
       height={size}
       loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : 'auto'}
       decoding="async"
+      referrerPolicy="no-referrer"
       className={shared}
       style={{ width: size, height: size }}
     />

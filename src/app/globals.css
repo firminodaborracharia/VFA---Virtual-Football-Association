@@ -44,6 +44,20 @@
   --vfa-shadow-lg: 0 24px 60px -20px rgb(0 0 0 / 0.7);
   --vfa-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
+  /**
+   * Raio dos cantos. Um número só, e o site inteiro muda de temperamento.
+   *
+   * Cantos muito arredondados (16px+) são a assinatura visual de painel
+   * administrativo e de SaaS. Site de competição usa canto curto e reto: a
+   * referência aqui é placar de estádio e capa de jornal esportivo, não
+   * dashboard. 6px mantém o desenho contemporâneo sem virar bolha.
+   */
+  --vfa-radius: 6px;
+  --vfa-radius-sm: 4px;
+
+  /** Corte diagonal usado em elementos de destaque (hero, faixas, selos). */
+  --vfa-notch: 14px;
+
   color-scheme: dark;
 }
 
@@ -95,6 +109,14 @@
 
   --shadow-card: var(--vfa-shadow);
   --shadow-pop: var(--vfa-shadow-lg);
+
+  /* Os utilitários rounded-* do Tailwind passam a obedecer ao token acima. */
+  --radius-sm: var(--vfa-radius-sm);
+  --radius-md: var(--vfa-radius);
+  --radius-lg: var(--vfa-radius);
+  --radius-xl: calc(var(--vfa-radius) + 2px);
+  --radius-2xl: calc(var(--vfa-radius) + 2px);
+  --radius-3xl: calc(var(--vfa-radius) + 4px);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -119,24 +141,55 @@ body {
   overflow-x: hidden;
 }
 
-/* Fundo com textura sutil de estádio — gradientes, sem imagem, sem custo de rede. */
+/**
+ * Fundo de estádio, sem uma única imagem.
+ *
+ * Duas camadas empilhadas, ambas em gradiente puro:
+ *
+ *  • `body::before` é a luz — um refletor no alto do campo, mais quente ao
+ *    centro, decaindo para o preto nas bordas. É o que dá profundidade e tira
+ *    o ar de "fundo cinza de painel".
+ *  • `body::after` é a grama — faixas diagonais alternadas, no mesmo desenho
+ *    do corte de gramado de estádio, em opacidade baixíssima. Só se percebe
+ *    de canto de olho, que é exatamente o efeito desejado: textura, não
+ *    estampa.
+ *
+ * Gradiente custa zero requisição de rede e escala em qualquer resolução.
+ */
 body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 70% 45% at 50% -12%,
+      color-mix(in oklab, var(--vfa-accent) 16%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 92% 4%,
+      color-mix(in oklab, var(--vfa-accent-alt) 14%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(ellipse 120% 70% at 50% 120%, rgb(0 0 0 / 0.55), transparent 60%);
+}
+
+body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(
-      ellipse 80% 50% at 50% -10%,
-      color-mix(in oklab, var(--vfa-accent) 12%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 60% 40% at 100% 0%,
-      color-mix(in oklab, var(--vfa-accent-alt) 10%, transparent),
-      transparent 60%
-    );
+  opacity: 0.5;
+  background: repeating-linear-gradient(
+    115deg,
+    transparent 0 64px,
+    color-mix(in oklab, var(--vfa-fg) 1.6%, transparent) 64px 128px
+  );
+  /* Some antes de encostar no conteúdo denso da parte de baixo da página. */
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
 }
 
 ::selection {
@@ -191,8 +244,130 @@ body::before {
 @utility card-vfa {
   background-color: var(--vfa-surface);
   border: 1px solid var(--vfa-border);
-  border-radius: 1rem;
+  border-radius: var(--vfa-radius);
   box-shadow: var(--vfa-shadow-sm);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Tipografia de competição
+
+   O que separa um site de liga de um painel administrativo quase nunca é a
+   cor — é a tipografia. Painel usa peso médio, tamanho uniforme e caixa
+   mista. Site de campeonato usa manchete: caixa alta, peso máximo, entre-
+   letras negativo e uma leve inclinação que sugere movimento.
+
+   Como o projeto usa a pilha de fontes do sistema de propósito (nenhuma
+   requisição de rede, ver src/app/layout.tsx), o caráter vem de tratamento,
+   não de uma fonte baixada: peso 900, `font-stretch` condensado onde a fonte
+   suporta, tracking apertado e inclinação controlada.
+   ══════════════════════════════════════════════════════════════ */
+
+/** Manchete. Para títulos de página e do hero. */
+@utility display-vfa {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  font-stretch: 92%;
+  text-wrap: balance;
+}
+
+/** Manchete inclinada, para o hero e faixas de campeão. */
+@utility display-italic {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  font-stretch: 92%;
+  transform: skewX(-7deg);
+  transform-origin: left bottom;
+}
+
+/**
+ * Rótulo miúdo com barra de destaque à esquerda — o "chapéu" das seções.
+ * É o elemento que mais rápido tira o ar de dashboard de uma página: em vez
+ * de um <h2> solto, a seção passa a ter cabeçalho editorial.
+ */
+@utility eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--vfa-fg-muted);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 1.25rem;
+  height: 3px;
+  background: var(--vfa-accent);
+  transform: skewX(-20deg);
+}
+
+/**
+ * Números de placar: largura fixa por dígito, para que o resultado não dance
+ * quando muda de 1 para 11. É o mesmo princípio do placar eletrônico.
+ */
+@utility scoreboard {
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+/**
+ * Canto cortado na diagonal. Aplicado em faixas e cartões de destaque, é o
+ * detalhe que faz o desenho ler como identidade esportiva em vez de caixa
+ * genérica. Deliberadamente escasso: usado em tudo, vira ruído.
+ */
+@utility notch {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--vfa-notch)) 0,
+    100% var(--vfa-notch),
+    100% 100%,
+    var(--vfa-notch) 100%,
+    0 calc(100% - var(--vfa-notch))
+  );
+}
+
+/** Faixa de acento vertical à esquerda, no espírito das cores de clube. */
+@utility edge-accent {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.edge-accent::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.15em;
+  left: 0;
+  width: 4px;
+  background: linear-gradient(var(--vfa-accent), var(--vfa-accent-alt));
+  transform: skewX(-12deg);
+}
+
+/** Linha que preenche o espaço à direita de um título de seção. */
+@utility rule-accent {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--vfa-border-strong),
+    color-mix(in oklab, var(--vfa-border-strong) 20%, transparent)
+  );
+}
+
+/** Faixa listrada diagonal — usada em cabeçalhos de competição e no rodapé. */
+@utility stripes-accent {
+  background-image: repeating-linear-gradient(
+    -60deg,
+    color-mix(in oklab, var(--vfa-accent) 22%, transparent) 0 6px,
+    transparent 6px 14px
+  );
 }
 
 /* Brilho de destaque atrás de elementos importantes. */

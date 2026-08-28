@@ -203,7 +203,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
       <div className="container-vfa space-y-8 py-8">
         {/* ══════════ NÚMEROS DA TEMPORADA ══════════ */}
         <section>
-          <h2 className="mb-4 text-lg font-black tracking-tight">
+          <h2 className="display-vfa mb-4 text-lg">
             Estatísticas {season ? `— ${season.name}` : ''}
           </h2>
 
@@ -357,7 +357,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
         {/* ══════════ ÚLTIMAS PARTIDAS DO CLUBE ══════════ */}
         {recentMatches.rows.length > 0 ? (
           <section>
-            <h2 className="mb-4 text-lg font-black tracking-tight">
+            <h2 className="display-vfa mb-4 text-lg">
               Últimas partidas do {player.clubName}
             </h2>
             <Card className="divide-y divide-line overflow-hidden">

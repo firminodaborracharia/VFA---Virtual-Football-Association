@@ -7,9 +7,10 @@
  */
 
 import { inArray } from 'drizzle-orm';
+import { cache } from 'react';
 import { z } from 'zod';
 
-import { db } from '@/db';
+import { db, withTimeout } from '@/db';
 import { appSettings } from '@/db/schema';
 
 /* ── Identidade visual ────────────────────────────────────────
@@ -72,39 +73,51 @@ export const DEFAULT_SETTINGS: Settings = {
   roblox: robloxSchema.parse({}),
 };
 
+async function loadSettings(): Promise<Settings> {
+  const keys = Object.keys(SETTING_SCHEMAS) as SettingKey[];
+  const rows = await db.select().from(appSettings).where(inArray(appSettings.key, keys));
+
+  const result = { ...DEFAULT_SETTINGS };
+  for (const row of rows) {
+    const key = row.key as SettingKey;
+    const schema = SETTING_SCHEMAS[key];
+    if (!schema) continue;
+    const parsed = schema.safeParse(row.value);
+    if (parsed.success) {
+      // A união de schemas impede a inferência automática aqui; o safeParse
+      // acima já garante que o formato bate com a chave.
+      (result as Record<string, unknown>)[key] = parsed.data;
+    }
+  }
+  return result;
+}
+
 /**
  * Lê todas as configurações. Se o banco estiver indisponível ou vazio, devolve
  * os padrões — a home nunca fica em branco por causa de configuração.
+ *
+ * Envolvido em `cache()` do React: numa mesma requisição, `generateMetadata`,
+ * o layout raiz e a página chamam isto de forma independente. Sem a memoização
+ * eram três idas ao banco para o mesmo dado, em toda navegação.
+ *
+ * O `withTimeout` é a rede de segurança: esta função roda no layout raiz, que
+ * embrulha TODAS as páginas. Um banco lento aqui pendurava o site inteiro sem
+ * dar nenhuma mensagem.
  */
-export async function getSettings(): Promise<Settings> {
+export const getSettings = cache(async (): Promise<Settings> => {
   // Sem banco configurado (build limpo, primeira execução) o site sobe com a
   // identidade padrão em vez de esperar um timeout de conexão.
   if (!process.env.DATABASE_URL) return DEFAULT_SETTINGS;
 
   try {
-    const keys = Object.keys(SETTING_SCHEMAS) as SettingKey[];
-    const rows = await db
-      .select()
-      .from(appSettings)
-      .where(inArray(appSettings.key, keys));
-
-    const result = { ...DEFAULT_SETTINGS };
-    for (const row of rows) {
-      const key = row.key as SettingKey;
-      const schema = SETTING_SCHEMAS[key];
-      if (!schema) continue;
-      const parsed = schema.safeParse(row.value);
-      if (parsed.success) {
-        // A união de schemas impede a inferência automática aqui; o safeParse
-        // acima já garante que o formato bate com a chave.
-        (result as Record<string, unknown>)[key] = parsed.data;
-      }
-    }
-    return result;
+    return await withTimeout(loadSettings(), DEFAULT_SETTINGS, {
+      ms: 8_000,
+      label: 'Leitura das configurações do site',
+    });
   } catch {
     return DEFAULT_SETTINGS;
   }
-}
+});
 
 export async function getSetting<K extends SettingKey>(
   key: K,
