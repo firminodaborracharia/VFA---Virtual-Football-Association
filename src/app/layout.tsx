@@ -19,6 +19,35 @@ import './globals.css';
 const FONT_STACK =
   "'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif";
 
+/**
+ * Endereço público do site, à prova de variável mal preenchida.
+ *
+ * `process.env.X ?? padrão` NÃO cobre o caso mais comum em deploy: a variável
+ * existe, mas com valor vazio. `??` só age em `undefined` e `null`, então a
+ * string vazia passa direto e `new URL('')` derruba o build inteiro — foi
+ * exatamente o que aconteceu na primeira tentativa de subir para a Vercel.
+ *
+ * Aqui a regra é outra: só aceita um endereço que realmente seja uma URL. Erro
+ * de digitação (`vfa.vercel.app` sem `https://`) também cai no padrão, em vez
+ * de quebrar a geração de metadados.
+ */
+function siteUrl(): URL {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  if (raw) {
+    try {
+      return new URL(raw);
+    } catch {
+      console.warn(
+        `[VFA] NEXT_PUBLIC_SITE_URL não é uma URL válida ("${raw}"). ` +
+          'Use o endereço completo, com https://. Seguindo com localhost.',
+      );
+    }
+  }
+
+  return new URL('http://localhost:3000');
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const { site } = await getSettings();
 
@@ -29,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: site.description,
     applicationName: site.name,
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+    metadataBase: siteUrl(),
     openGraph: {
       title: `${site.name} — ${site.fullName}`,
       description: site.description,

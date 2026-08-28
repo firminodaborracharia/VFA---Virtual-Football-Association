@@ -19,8 +19,19 @@ declare global {
   var __vfaPostgres: ReturnType<typeof postgres> | undefined;
 }
 
-/** Acima disto, a consulta vira um aviso no terminal em desenvolvimento. */
-const SLOW_QUERY_MS = Number(process.env.DB_SLOW_QUERY_MS ?? 1_500);
+/**
+ * Acima disto, a consulta vira um aviso no terminal em desenvolvimento.
+ *
+ * A checagem de `Number.isFinite` não é preciosismo: `Number('')` é 0, então
+ * uma variável declarada e vazia — situação corriqueira em painel de deploy —
+ * faria TODA consulta ser tratada como lenta e encher o log.
+ */
+const SLOW_QUERY_MS = positiveNumber(process.env.DB_SLOW_QUERY_MS, 1_500);
+
+function positiveNumber(raw: string | undefined, fallback: number): number {
+  const parsed = Number(raw?.trim());
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 function createClient() {
   const url = process.env.DATABASE_URL;
