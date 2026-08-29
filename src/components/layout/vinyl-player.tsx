@@ -17,11 +17,11 @@ import { cn, DEFAULT_CREST } from '@/lib/utils';
  *
  * ── Sobre tocar sozinho ──
  *
- * Não toca. Chrome, Safari e Firefox bloqueiam áudio automático desde 2018 —
- * `play()` sem um clique anterior devolve uma promessa rejeitada. Um site que
- * "tenta" tocar sozinho não fica mais musical: fica com um botão em estado
- * mentiroso, mostrando pausa enquanto nada sai. Aqui o disco gira desde o
- * início como elemento visual, e o som espera o clique.
+ * Com `autoPlay`, tenta tocar na carga e, se o navegador recusar, no primeiro
+ * gesto do visitante. Os detalhes e o porquê estão no efeito lá embaixo — em
+ * resumo: nenhum site consegue GARANTIR áudio automático, a decisão é do
+ * navegador. O estado do botão nunca mente: se o áudio não estiver saindo, o
+ * disco mostra o ícone de play.
  *
  * ── Sobre lembrar a escolha ──
  *
@@ -63,7 +63,14 @@ function readPrefs(): { volume: number; muted: boolean } {
   }
 }
 
-export function VinylPlayer({ track }: { track: PlayerTrack }) {
+export function VinylPlayer({
+  track,
+  autoPlay = false,
+}: {
+  track: PlayerTrack;
+  /** Tenta tocar na carga e, se bloqueado, no primeiro gesto do visitante. */
+  autoPlay?: boolean;
+}) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [playing, setPlaying] = useState(false);
@@ -111,6 +118,77 @@ export function VinylPlayer({ track }: { track: PlayerTrack }) {
     audio.volume = volume;
     audio.muted = muted;
   }, [volume, muted]);
+
+  /**
+   * ══════════ Começar a tocar sozinho ══════════
+   *
+   * Leia isto antes de mexer: NÃO EXISTE forma de garantir que a música toque
+   * ao abrir a página. Chrome, Safari e Firefox bloqueiam áudio automático
+   * desde 2018, e a decisão é do navegador, não do site. O Chrome libera
+   * apenas para domínios em que a pessoa JÁ costuma dar play — por isso um
+   * site pode tocar sozinho no seu computador e ficar mudo no de todo mundo.
+   * Quem promete o contrário está descrevendo o próprio navegador, não o de
+   * quem visita.
+   *
+   * O que dá para fazer, e é o que este efeito faz:
+   *
+   *   1. Tentar tocar assim que a página carrega. Numa parte dos casos passa.
+   *   2. Se o navegador recusar, ficar de tocaia: o PRIMEIRO gesto que a
+   *      pessoa fizer na página — clique em qualquer lugar, rolagem, toque na
+   *      tela, tecla — libera o áudio e a música começa.
+   *
+   * Na prática isso parece automático, porque ninguém abre um site e fica
+   * parado. A diferença para o que você pediu é que a pessoa não precisa
+   * acertar o botão do disco: qualquer interação serve.
+   */
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !autoPlay) return;
+
+    let cancelled = false;
+    const GESTURES = ['pointerdown', 'keydown', 'touchstart', 'scroll', 'wheel'] as const;
+
+    async function attempt() {
+      const element = audioRef.current;
+      if (!element || cancelled) return true;
+
+      try {
+        await element.play();
+        return true;
+      } catch {
+        // Bloqueio de autoplay: não é erro de arquivo, então NÃO marcamos a
+        // faixa como quebrada. Só falta um gesto.
+        return false;
+      }
+    }
+
+    function onGesture() {
+      void attempt().then((ok) => {
+        if (ok) removeListeners();
+      });
+    }
+
+    function removeListeners() {
+      for (const event of GESTURES) {
+        window.removeEventListener(event, onGesture);
+      }
+    }
+
+    void attempt().then((ok) => {
+      if (ok || cancelled) return;
+      for (const event of GESTURES) {
+        // `once: false` porque a primeira tentativa pode falhar de novo se o
+        // gesto não for considerado ativação (rolagem por inércia, por
+        // exemplo). Os ouvintes saem sozinhos quando o áudio começar.
+        window.addEventListener(event, onGesture, { passive: true });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      removeListeners();
+    };
+  }, [autoPlay]);
 
   async function toggle() {
     const audio = audioRef.current;
@@ -272,7 +350,7 @@ export function VinylPlayer({ track }: { track: PlayerTrack }) {
           ref={audioRef}
           src={track.url}
           loop
-          preload="none"
+          preload={autoPlay ? 'auto' : 'none'}
           onError={() => setBroken(true)}
           onEnded={() => setPlaying(false)}
           onPause={() => setPlaying(false)}

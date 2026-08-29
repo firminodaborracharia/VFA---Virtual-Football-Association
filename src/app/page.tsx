@@ -1,4 +1,13 @@
-import { ArrowRight, CalendarDays, Newspaper, Table2, Trophy } from 'lucide-react';
+import {
+  ArrowRight,
+  BarChart3,
+  CalendarDays,
+  Newspaper,
+  Shield,
+  Table2,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import { ClubCrest, PlayerAvatar } from '@/components/common/remote-image';
@@ -9,6 +18,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { withDeadline } from '@/db';
+import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { parseConfig } from '@/lib/engine/config';
 import {
   getActiveSeason,
@@ -28,6 +38,9 @@ import { cn, COMPETITION_TYPE_LABELS } from '@/lib/utils';
 
 // Resultados e tabelas mudam a cada partida registrada; a home é sempre
 // renderizada sob demanda em vez de servida de um HTML estático desatualizado.
+/** Imagem padrão do hero, empacotada com o projeto. */
+const HERO_IMAGE = '/img/hero.webp';
+
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
@@ -97,17 +110,44 @@ export default async function HomePage() {
     <>
       {/* ══════════ HERO DA TEMPORADA ══════════ */}
       <section className="relative overflow-hidden border-b border-line">
-        {season.bannerUrl ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={season.bannerUrl}
-              alt=""
-              className="absolute inset-0 size-full object-cover opacity-25"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/80 to-bg/40" />
-          </>
-        ) : null}
+        {/*
+          Imagem de fundo desfocada.
+
+          O desfoque não é enfeite: é o que torna a foto utilizável como fundo.
+          Nítida, ela disputa atenção com a manchete e faz o texto branco cair
+          em cima de detalhes claros — o nome da temporada some sobre o refletor
+          do estádio. Desfocada, sobra o que interessa (a cor, a luz, a
+          sensação de entrar em campo) e o texto ganha uma superfície calma.
+
+          `scale-110` existe por causa do desfoque: o filtro esvazia as bordas
+          da imagem, e sem a ampliação apareceria uma moldura clara em volta.
+
+          O banner da temporada, quando cadastrado, tem prioridade sobre a
+          imagem padrão — é o administrador trocando a arte sem tocar no código.
+        */}
+        <div className="absolute inset-0" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={season.bannerUrl ?? HERO_IMAGE}
+            alt=""
+            className="size-full scale-110 object-cover object-center blur-[5px]"
+          />
+          {/*
+            O escurecimento é DIRECIONAL, não uniforme.
+
+            A primeira versão usava duas camadas cobrindo a área inteira e a
+            foto praticamente sumiu — sobrou uma mancha escura que não valia o
+            peso do arquivo. O texto ocupa só a metade esquerda, então é lá que
+            o fundo precisa fechar; à direita a imagem fica visível e faz o
+            trabalho para o qual foi escolhida.
+
+            A camada de baixo costura o hero com o resto da página, para a foto
+            não terminar num corte reto.
+          */}
+          <div className="absolute inset-0 bg-gradient-to-r from-bg via-bg/75 to-bg/25" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-bg to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-bg/70 to-transparent" />
+        </div>
 
         <div className="container-vfa relative py-14 sm:py-20">
           <div className="max-w-3xl">
@@ -178,6 +218,12 @@ export default async function HomePage() {
 
       <div className="container-vfa space-y-12 py-10">
         {hasDemoData ? <DemoNotice /> : null}
+
+        {/* ══════════ CATEGORIAS ══════════ */}
+        <section>
+          <SectionTitle title={dict.home.categories} />
+          <CategoryGrid dict={dict} />
+        </section>
 
         {/*
           ══════════ NOTÍCIAS ══════════
@@ -413,6 +459,81 @@ function SectionTitle({
           <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Grade de categorias — o atalho para as seções principais.
+ *
+ * Cada cartão é uma porta larga com ícone, título e uma frase que diz o que se
+ * encontra ali. Isso resolve um problema real do menu: "Destaques" e
+ * "Estatísticas" não dizem nada a quem chega pela primeira vez, e o menu não
+ * tem espaço para explicar. Aqui tem.
+ */
+function CategoryGrid({ dict }: { dict: Dictionary }) {
+  const categories = [
+    {
+      href: '/jogadores',
+      icon: Users,
+      title: dict.nav.players,
+      description: dict.categories.players,
+    },
+    { href: '/clubes', icon: Shield, title: dict.nav.clubs, description: dict.categories.clubs },
+    {
+      href: '/classificacao',
+      icon: Table2,
+      title: dict.nav.standings,
+      description: dict.categories.standings,
+    },
+    {
+      href: '/partidas',
+      icon: CalendarDays,
+      title: dict.nav.matches,
+      description: dict.categories.matches,
+    },
+    {
+      href: '/competicoes',
+      icon: Trophy,
+      title: dict.nav.competitions,
+      description: dict.categories.competitions,
+    },
+    {
+      href: '/estatisticas',
+      icon: BarChart3,
+      title: dict.nav.stats,
+      description: dict.categories.stats,
+    },
+  ];
+
+  return (
+    <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {categories.map((category) => {
+        const Icon = category.icon;
+        return (
+          <Link
+            key={category.href}
+            href={category.href}
+            className="glass group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 motion-reduce:hover:translate-y-0"
+          >
+            {/* Brilho que segue o canto superior direito no hover. Aparece por
+                trás do conteúdo e some sozinho — nenhum estado em JavaScript. */}
+            <span
+              className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full bg-accent/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+              aria-hidden
+            />
+
+            <span className="relative flex size-11 items-center justify-center rounded-xl bg-accent/12 text-accent transition-transform duration-300 group-hover:scale-110">
+              <Icon className="size-5" />
+            </span>
+
+            <h3 className="display-vfa relative mt-4 text-lg">{category.title}</h3>
+            <p className="relative mt-1 text-sm text-muted">{category.description}</p>
+
+            <ArrowRight className="absolute top-5 right-5 size-4 text-subtle transition-all duration-300 group-hover:translate-x-1 group-hover:text-accent" />
+          </Link>
+        );
+      })}
     </div>
   );
 }

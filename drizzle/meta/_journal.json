@@ -15,6 +15,13 @@
       "when": 1787959788291,
       "tag": "0001_news_translations",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787961682805,
+      "tag": "0002_player_positions",
+      "breakpoints": true
     }
   ]
 }

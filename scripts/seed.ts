@@ -189,7 +189,19 @@ const NICKNAMES = [
   'Relâmpago', 'Coringa', 'Furacão', 'Sniper', 'Titan', 'Gladiador', 'Mago',
 ];
 
-const POSITIONS = ['GOALKEEPER', 'DEFENDER', 'MIDFIELDER', 'FORWARD'] as const;
+/**
+ * Uma escalação plausível de 3v3 com reservas, na ordem do gol para o ataque.
+ * O primeiro jogador de cada elenco é sempre o goleiro; os demais seguem esta
+ * lista, e os que sobram recebem uma posição sorteada.
+ */
+const POSITIONS = [
+  'GOALKEEPER',
+  'DEFENDER',
+  'DEFENSIVE_MIDFIELDER',
+  'MIDFIELDER',
+  'ATTACKING_MIDFIELDER',
+  'FORWARD',
+] as const;
 
 /**
  * As cores das editorias saem da mesma família do escudo — do menta claro ao
@@ -364,18 +376,24 @@ async function main() {
           .values({ clubId: club.id, seasonId: season.id, leagueId: league.id })
           .onConflictDoNothing();
 
-        // ── Elenco: 5 jogadores por clube (3v3 + reservas) ──
+        /**
+         * ── Elenco: 6 jogadores por clube (3v3 + reservas) ──
+         *
+         * Seis, e não cinco, porque são seis posições. Com cinco, o último
+         * item da lista — justamente ATACANTE — nunca era sorteado, e a
+         * demonstração subia com uma liga inteira sem nenhum atacante.
+         */
         const squad: { id: string; name: string }[] = [];
 
-        for (let index = 0; index < 5; index += 1) {
+        for (let index = 0; index < 6; index += 1) {
           const first = pick(FIRST_NAMES);
           // Nomes precisam ser únicos: dois "Leo" em ligas diferentes deixariam
           // a artilharia ambígua para quem lê o site.
           const displayName = uniqueName(first);
           const username = `${slugify(first).replace(/-/g, '')}${clubSpec.abbr}${index + 1}`;
 
-          const position =
-            index === 0 ? 'GOALKEEPER' : index === 4 ? pick([...POSITIONS]) : POSITIONS[index];
+          // Um jogador de cada posição, na ordem do gol para o ataque.
+          const position = POSITIONS[index];
 
           const [player] = await db
             .insert(players)

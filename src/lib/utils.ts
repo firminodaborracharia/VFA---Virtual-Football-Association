@@ -110,15 +110,26 @@ export function relativeTime(date: Date | string | null | undefined): string {
 
 export const POSITION_LABELS = {
   GOALKEEPER: 'Goleiro',
-  DEFENDER: 'Defensor',
+  DEFENDER: 'Zagueiro',
+  DEFENSIVE_MIDFIELDER: 'Meio-campo defensivo',
   MIDFIELDER: 'Meio-campo',
+  ATTACKING_MIDFIELDER: 'Meio-campo ofensivo',
   FORWARD: 'Atacante',
 } as const;
 
+/**
+ * Siglas para as etiquetas dos cards, onde não cabe o nome inteiro.
+ *
+ * VOL e MEA seguem o uso brasileiro de transmissão: volante para o meio-campo
+ * defensivo e meia-atacante para o ofensivo. "MED" e "MEO" seriam derivações
+ * literais do nome do enum e não significariam nada para quem lê.
+ */
 export const POSITION_SHORT = {
   GOALKEEPER: 'GOL',
-  DEFENDER: 'DEF',
+  DEFENDER: 'ZAG',
+  DEFENSIVE_MIDFIELDER: 'VOL',
   MIDFIELDER: 'MEI',
+  ATTACKING_MIDFIELDER: 'MEA',
   FORWARD: 'ATA',
 } as const;
 

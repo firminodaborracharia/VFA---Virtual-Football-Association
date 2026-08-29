@@ -136,6 +136,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
           {settings.audio.enabled ? (
             <VinylPlayer
+              autoPlay={settings.audio.autoPlay}
               track={{
                 url: trackUrl,
                 title: settings.audio.title,

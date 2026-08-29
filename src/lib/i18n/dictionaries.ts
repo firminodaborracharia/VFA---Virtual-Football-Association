@@ -101,6 +101,16 @@ const pt = {
       'Quando o calendário da temporada for publicado, o próximo jogo aparece aqui.',
     noNews: 'Nenhuma notícia publicada',
     noNewsHelp: 'As matérias aparecem aqui depois de publicadas no painel.',
+    categories: 'Explore',
+  },
+
+  categories: {
+    players: 'Gols, assistências e evolução de cada jogador.',
+    clubs: 'Elencos, ligas e forma recente.',
+    standings: 'A tabela de cada liga, atualizada a cada resultado.',
+    matches: 'Calendário completo, resultados e súmulas.',
+    competitions: 'Ligas, mata-mata e torneios continentais.',
+    stats: 'Rankings de artilharia, assistências e defesa.',
   },
 
   standings: {
@@ -234,6 +244,16 @@ const en: Dictionary = {
     noMatchesHelp: 'Once the season calendar is published, the next fixture shows up here.',
     noNews: 'No news published',
     noNewsHelp: 'Articles appear here after being published in the panel.',
+    categories: 'Explore',
+  },
+
+  categories: {
+    players: 'Goals, assists and form for every player.',
+    clubs: 'Squads, leagues and recent form.',
+    standings: 'Every league table, updated after each result.',
+    matches: 'Full calendar, results and match reports.',
+    competitions: 'Leagues, knockouts and continental cups.',
+    stats: 'Scoring, assist and defensive rankings.',
   },
 
   standings: {
@@ -357,6 +377,16 @@ const es: Dictionary = {
     noMatchesHelp: 'Cuando se publique el calendario, el próximo partido aparecerá aquí.',
     noNews: 'No hay noticias publicadas',
     noNewsHelp: 'Los artículos aparecen aquí después de publicarse en el panel.',
+    categories: 'Explora',
+  },
+
+  categories: {
+    players: 'Goles, asistencias y evolución de cada jugador.',
+    clubs: 'Plantillas, ligas y forma reciente.',
+    standings: 'La tabla de cada liga, actualizada con cada resultado.',
+    matches: 'Calendario completo, resultados y actas.',
+    competitions: 'Ligas, eliminatorias y torneos continentales.',
+    stats: 'Rankings de goleo, asistencias y defensa.',
   },
 
   standings: {

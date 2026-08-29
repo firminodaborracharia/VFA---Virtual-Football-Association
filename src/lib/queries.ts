@@ -34,6 +34,7 @@ import {
   transfers,
   users,
 } from '@/db/schema';
+import type { PositionValue } from '@/db/schema';
 
 /* ── Aliases ──────────────────────────────────────────────────
    A tabela `clubs` entra duas vezes na mesma consulta de partidas (mandante e
@@ -357,7 +358,8 @@ export type PlayerFilters = {
   leagueId?: string;
   clubId?: string;
   nationId?: string;
-  position?: 'GOALKEEPER' | 'DEFENDER' | 'MIDFIELDER' | 'FORWARD';
+  /** Deriva do enum do schema: acrescentar uma posição não exige tocar aqui. */
+  position?: PositionValue;
   search?: string;
   limit?: number;
   offset?: number;

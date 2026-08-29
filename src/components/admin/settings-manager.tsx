@@ -185,6 +185,17 @@ export function SettingsManager({ settings }: { settings: Settings }) {
             onChange={(event) => setAudio({ ...audio, enabled: event.target.checked })}
           />
 
+          <Checkbox
+            label="Começar a tocar sozinho"
+            checked={audio.autoPlay}
+            onChange={(event) => setAudio({ ...audio, autoPlay: event.target.checked })}
+          />
+          <p className="-mt-2 text-xs text-subtle">
+            Os navegadores bloqueiam áudio automático, e não há como um site contornar isso.
+            Com esta opção marcada, o site tenta tocar ao abrir e, se for bloqueado, começa no
+            primeiro clique, rolagem ou toque em qualquer lugar da página.
+          </p>
+
           <Field
             label="Endereço do áudio"
             hint="Coloque o arquivo em public/audio/ e use /audio/nome.mp3, ou cole uma URL completa. Deixe em branco para o disco ficar só como enfeite, sem som. Use apenas música que você tem direito de publicar — o arquivo fica acessível a qualquer visitante do site."

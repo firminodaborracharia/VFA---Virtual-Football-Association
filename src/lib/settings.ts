@@ -70,6 +70,14 @@ export const audioSchema = z.object({
   enabled: z.boolean().default(true),
   /** Endereço do arquivo (`/audio/tema.mp3` ou uma URL completa). */
   url: z.string().default(''),
+  /**
+   * Tenta tocar sozinho ao abrir o site.
+   *
+   * "Tenta" é a palavra exata: navegador nenhum garante isso. Bloqueado o
+   * autoplay, a música começa no primeiro gesto do visitante — clique,
+   * rolagem, toque ou tecla, em qualquer lugar da página.
+   */
+  autoPlay: z.boolean().default(true),
   title: z.string().default(''),
   artist: z.string().default(''),
 });

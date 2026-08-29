@@ -55,10 +55,23 @@ export const continentEnum = pgEnum('continent', [
   'ASIA',
   'OCEANIA',
 ]);
+/**
+ * Posições em campo.
+ *
+ * A ORDEM importa e não é alfabética: vai do gol para o ataque. É essa ordem
+ * que os menus e as listas de elenco usam, porque é assim que qualquer pessoa
+ * que acompanha futebol espera ver uma escalação — goleiro primeiro, atacante
+ * por último. Ordenar por nome jogaria "Atacante" para o começo.
+ *
+ * Acrescentar um valor no meio de um enum do PostgreSQL exige `ALTER TYPE ...
+ * ADD VALUE ... BEFORE/AFTER`, e é isso que a migration 0002 faz.
+ */
 export const positionEnum = pgEnum('position', [
   'GOALKEEPER',
   'DEFENDER',
+  'DEFENSIVE_MIDFIELDER',
   'MIDFIELDER',
+  'ATTACKING_MIDFIELDER',
   'FORWARD',
 ]);
 export const competitionTypeEnum = pgEnum('competition_type', [

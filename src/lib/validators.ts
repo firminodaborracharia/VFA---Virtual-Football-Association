@@ -38,7 +38,15 @@ const isoDate = z
 
 /* ── Jogadores ─────────────────────────────────────────────── */
 
-export const POSITIONS = ['GOALKEEPER', 'DEFENDER', 'MIDFIELDER', 'FORWARD'] as const;
+/** Mesma ordem do enum no banco: do gol para o ataque. */
+export const POSITIONS = [
+  'GOALKEEPER',
+  'DEFENDER',
+  'DEFENSIVE_MIDFIELDER',
+  'MIDFIELDER',
+  'ATTACKING_MIDFIELDER',
+  'FORWARD',
+] as const;
 
 export const playerCreateSchema = z.object({
   displayName: z.string().trim().min(2, 'O nome precisa de pelo menos 2 caracteres.').max(60),
