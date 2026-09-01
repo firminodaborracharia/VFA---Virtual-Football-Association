@@ -181,16 +181,20 @@ export default async function HomePage() {
           Faixa de números da temporada, encostada na base do hero.
 
           Não é enfeite: era aqui que sobrava um vão vazio entre a manchete e o
-          conteúdo, e vão vazio é o que faz uma página parecer inacabada. Toda
-          liga de verdade abre com estes quatro números porque eles respondem,
-          numa olhada, "de que tamanho é esta competição".
+          conteúdo, e vão vazio é o que faz uma página parecer inacabada.
         */}
         <div className="relative border-t border-line/60 bg-bg/40 backdrop-blur-sm">
-          <div className="container-vfa grid grid-cols-2 divide-x divide-line/60 sm:grid-cols-4">
+          {/*
+            Dois números, não quatro.
+
+            Partidas e gols saíram junto com o resto do conteúdo de jogo: a
+            home passou a ser sobre clubes e jogadores, e um número solto de
+            partidas aqui prometeria uma seção que não existe mais nesta
+            página.
+          */}
+          <div className="container-vfa grid grid-cols-2 divide-x divide-line/60">
             <HeroStat label={dict.home.clubsCount} value={totals.clubs} />
-            <HeroStat label={dict.home.playersCount} value={totals.players} />
-            <HeroStat label={dict.home.matchesCount} value={totals.matchesPlayed} />
-            <HeroStat label={dict.home.goalsCount} value={totals.goals} accent />
+            <HeroStat label={dict.home.playersCount} value={totals.players} accent />
           </div>
         </div>
       </section>

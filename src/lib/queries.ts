@@ -1287,8 +1287,12 @@ export async function listCompetitionsAdmin(seasonId: string) {
 /**
  * Números da temporada para a faixa do hero.
  *
- * Uma consulta só, com subselects, em vez de cinco idas ao banco: é a primeira
- * coisa que a home renderiza e o custo precisa ser desprezível.
+ * Uma consulta só, com subselects, em vez de várias idas ao banco: é a
+ * primeira coisa que a home renderiza e o custo precisa ser desprezível.
+ *
+ * Conta apenas clubes e jogadores. Partidas e gols saíram da home junto com o
+ * resto do conteúdo de jogo, e manter os dois subselects aqui seria pagar por
+ * um número que ninguém mais lê.
  */
 export const getSeasonTotals = cache(async (seasonId: string) => {
   const [row] = await db
@@ -1299,19 +1303,10 @@ export const getSeasonTotals = cache(async (seasonId: string) => {
         where ${clubSeasonMemberships.seasonId} = ${seasonId}
       )`,
       players: sql<number>`(select count(*)::int from ${players} where ${players.isActive} = true)`,
-      matchesPlayed: sql<number>`(
-        select count(*)::int from ${matches}
-        where ${matches.seasonId} = ${seasonId} and ${matches.status} = 'FINISHED'
-      )`,
-      goals: sql<number>`(
-        select coalesce(sum(${clubSeasonStats.goalsFor}), 0)::int
-        from ${clubSeasonStats}
-        where ${clubSeasonStats.seasonId} = ${seasonId}
-      )`,
     })
     .from(seasons)
     .where(eq(seasons.id, seasonId))
     .limit(1);
 
-  return row ?? { clubs: 0, players: 0, matchesPlayed: 0, goals: 0 };
+  return row ?? { clubs: 0, players: 0 };
 });
