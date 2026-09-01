@@ -12,7 +12,8 @@ import { ConfirmModal, Modal } from '@/components/ui/modal';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/toast';
 import { api } from '@/lib/client-api';
-import { POSITION_LABELS, POSITION_SHORT } from '@/lib/utils';
+import { OVERALL_MAX, OVERALL_MIN, rankFor } from '@/lib/ranks';
+import { POSITION_LABELS, POSITION_ORDER, POSITION_SHORT } from '@/lib/utils';
 
 export type AdminPlayer = {
   id: string;
@@ -25,6 +26,7 @@ export type AdminPlayer = {
   robloxSyncError: string | null;
   robloxSyncedAt: Date | null;
   shirtNumber: number | null;
+  overall: number | null;
   position: keyof typeof POSITION_LABELS;
   isActive: boolean;
   nationId: string | null;
@@ -40,6 +42,7 @@ type FormState = {
   nationId: string;
   currentClubId: string;
   shirtNumber: string;
+  overall: string;
   position: keyof typeof POSITION_LABELS;
   isActive: boolean;
   syncRoblox: boolean;
@@ -51,6 +54,7 @@ const EMPTY_FORM: FormState = {
   nationId: '',
   currentClubId: '',
   shirtNumber: '',
+  overall: '',
   position: 'MIDFIELDER',
   isActive: true,
   syncRoblox: true,
@@ -107,6 +111,7 @@ export function PlayersManager({
       nationId: player.nationId ?? '',
       currentClubId: player.clubId ?? '',
       shirtNumber: player.shirtNumber ? String(player.shirtNumber) : '',
+      overall: player.overall ? String(player.overall) : '',
       position: player.position,
       isActive: player.isActive,
       syncRoblox: false,
@@ -132,6 +137,7 @@ export function PlayersManager({
       nationId: form.nationId || null,
       currentClubId: form.currentClubId || null,
       shirtNumber: form.shirtNumber ? Number(form.shirtNumber) : null,
+      overall: form.overall ? Number(form.overall) : null,
       position: form.position,
       isActive: form.isActive,
       syncRoblox: form.syncRoblox,
@@ -423,9 +429,9 @@ export function PlayersManager({
                   setForm({ ...form, position: event.target.value as FormState['position'] })
                 }
               >
-                {Object.entries(POSITION_LABELS).map(([value, label]) => (
+                {POSITION_ORDER.map((value) => (
                   <option key={value} value={value}>
-                    {label}
+                    {POSITION_LABELS[value]}
                   </option>
                 ))}
               </Select>
@@ -439,6 +445,25 @@ export function PlayersManager({
                 value={form.shirtNumber}
                 onChange={(event) => setForm({ ...form, shirtNumber: event.target.value })}
                 placeholder="10"
+              />
+            </Field>
+
+            <Field
+              label="Overall"
+              error={errors.overall}
+              hint={
+                form.overall && rankFor(Number(form.overall))
+                  ? `Rank: ${rankFor(Number(form.overall))?.label}`
+                  : 'De 1 a 99. O rank sai daqui automaticamente.'
+              }
+            >
+              <Input
+                type="number"
+                min={OVERALL_MIN}
+                max={OVERALL_MAX}
+                value={form.overall}
+                onChange={(event) => setForm({ ...form, overall: event.target.value })}
+                placeholder="85"
               />
             </Field>
           </div>

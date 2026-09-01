@@ -265,6 +265,40 @@ body::after {
   }
 }
 
+/**
+ * Listas suspensas legíveis no tema escuro.
+ *
+ * O menu que abre num `<select>` é desenhado pelo SISTEMA OPERACIONAL, não
+ * pela página: nenhuma classe de Tailwind, nenhuma cor de fundo do site chega
+ * lá dentro. O Windows desenha esse menu em branco por padrão, e como o texto
+ * das opções herdava a cor clara do tema, o resultado era texto quase branco
+ * sobre fundo branco — ilegível, exatamente como na captura de tela.
+ *
+ * `color-scheme: dark` no elemento é o que resolve, e é a ÚNICA forma
+ * confiável: ela avisa o sistema operacional de que este controle é escuro, e
+ * o menu nativo vem escuro. As cores explícitas em `option` cobrem o Firefox
+ * no Linux, que não respeita totalmente o color-scheme.
+ */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: var(--vfa-bg-elevated);
+  color: var(--vfa-fg);
+}
+
+select option:checked,
+select option:hover {
+  background-color: var(--vfa-surface-3);
+  color: var(--vfa-accent);
+}
+
+/* No tema claro o menu volta a ser claro, pelo mesmo mecanismo. */
+[data-theme='light'] select {
+  color-scheme: light;
+}
+
 /* Cartão padrão do site. */
 @utility card-vfa {
   background-color: var(--vfa-surface);

@@ -33,6 +33,7 @@ export default async function AdminPlayersPage() {
         robloxUserId: player.robloxUserId,
         robloxHeadshotUrl: player.robloxHeadshotUrl,
         robloxAvatarUrl: player.robloxAvatarUrl,
+        overall: player.overall,
         robloxSyncError: null,
         robloxSyncedAt: null,
         shirtNumber: player.shirtNumber,

@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, LogOut, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -56,14 +55,15 @@ export function UserMenu({ user }: { user: NonNullable<HeaderUser> }) {
         />
       </button>
 
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-pop"
+      {/*
+        Este menu está no cabeçalho, ou seja, em toda página do site — e era o
+        último ponto puxando a biblioteca de animação para o pacote inicial.
+        Uma abertura de menu suspenso é uma transição de opacidade e escala; o
+        CSS faz isso sozinho.
+      */}
+      {open ? (
+          <div
+            className="animate-fade-in absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-pop"
             role="menu"
           >
             <div className="border-b border-line px-4 py-3">
@@ -104,9 +104,8 @@ export function UserMenu({ user }: { user: NonNullable<HeaderUser> }) {
                 Sair
               </button>
             </form>
-          </motion.div>
+          </div>
         ) : null}
-      </AnimatePresence>
     </div>
   );
 }

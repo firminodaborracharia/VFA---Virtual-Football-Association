@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { ClubCrest, PlayerAvatar } from '@/components/common/remote-image';
+import { RankBadge } from '@/components/domain/rank-badge';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatDate, POSITION_LABELS, POSITION_SHORT } from '@/lib/utils';
 
@@ -11,6 +12,7 @@ export type PlayerCardData = {
   displayName: string;
   shirtNumber: number | null;
   position: keyof typeof POSITION_LABELS;
+  overall: number | null;
   robloxUsername: string;
   robloxHeadshotUrl: string | null;
   robloxAvatarUrl: string | null;
@@ -46,6 +48,9 @@ export function PlayerCard({ player }: { player: PlayerCardData }) {
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-1.5">
+        {/* O rank vem primeiro: é o dado que a VFA usa para comparar jogadores,
+            e por isso ganha a posição de leitura mais forte da fileira. */}
+        <RankBadge overall={player.overall} size="sm" showOverall />
         <Badge tone="accent">{POSITION_SHORT[player.position]}</Badge>
         {player.nationFlag ? (
           <Badge title={player.nationName ?? undefined}>

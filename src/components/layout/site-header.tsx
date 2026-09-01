@@ -1,12 +1,24 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
 import { LogIn, Menu, Search, ShieldCheck, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { GlobalSearch } from '@/components/layout/global-search';
+import dynamic from 'next/dynamic';
+
+/**
+ * A busca entra sob demanda.
+ *
+ * O diálogo de busca só existe depois de alguém clicar na lupa ou apertar
+ * ⌘K, mas o import estático o colocava — e a biblioteca de animação que ele
+ * usa — no pacote da primeira página. Carregar sob demanda tira esse peso de
+ * todo visitante e o cobra apenas de quem realmente busca.
+ */
+const GlobalSearch = dynamic(
+  () => import('@/components/layout/global-search').then((mod) => mod.GlobalSearch),
+  { ssr: false },
+);
 import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 import { UserMenu } from '@/components/layout/user-menu';
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries';
@@ -142,14 +154,22 @@ export function SiteHeader({
                     {item.adminOnly ? <ShieldCheck className="size-3.5" /> : null}
                     {dict.nav[item.key]}
                   </span>
-                  {active ? (
-                    /* Barra grossa e reta, não um traço fino arredondado. */
-                    <motion.span
-                      layoutId="nav-underline"
-                      className="absolute inset-x-2 -bottom-[9px] h-[3px] bg-accent"
-                      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                    />
-                  ) : null}
+                  {/*
+                    Barra grossa e reta, em CSS.
+
+                    Antes era um `layoutId` do framer-motion, que desliza a
+                    barra de um item para o outro. O efeito é bonito e custava
+                    a biblioteca inteira no pacote de toda página — inclusive
+                    para quem abre o site no celular e nunca vê a barra, porque
+                    o menu some abaixo de 1280 pixels.
+                  */}
+                  <span
+                    className={cn(
+                      'absolute inset-x-2 -bottom-[9px] h-[3px] origin-left bg-accent transition-transform duration-300 ease-out',
+                      active ? 'scale-x-100' : 'scale-x-0',
+                    )}
+                    aria-hidden
+                  />
                 </Link>
               );
             })}
@@ -197,25 +217,42 @@ export function SiteHeader({
         </div>
       </header>
 
-      {/* ── Menu mobile ── */}
-      <AnimatePresence>
-        {menuOpen ? (
-          <div className="fixed inset-0 z-[70] xl:hidden">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-              onClick={() => setMenuOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-y-0 right-0 flex w-[min(20rem,85vw)] flex-col border-l border-line bg-bg-elevated"
-            >
+      {/*
+        ── Menu mobile ──
+
+        Fica SEMPRE no DOM, escondido por `translate-x-full` e
+        `pointer-events-none`, em vez de ser montado e desmontado.
+
+        Assim a gaveta desliza para dentro E para fora só com CSS. Era esse o
+        motivo de o `AnimatePresence` existir aqui: manter o elemento vivo o
+        suficiente para animar a saída. Trocar por visibilidade custa um punhado
+        de nós invisíveis no HTML e devolve os ~130 KB da biblioteca de animação
+        — que pesavam justamente no aparelho onde este menu é usado, o celular.
+
+        `inert` desliga a gaveta fechada por completo: nada dentro dela recebe
+        foco pelo Tab nem é anunciado por leitor de tela.
+      */}
+      <div
+        className={cn(
+          'fixed inset-0 z-[70] xl:hidden',
+          menuOpen ? 'visible' : 'invisible',
+        )}
+        inert={!menuOpen}
+      >
+        <div
+          className={cn(
+            'absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-200',
+            menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
+          )}
+          onClick={() => setMenuOpen(false)}
+        />
+        <aside
+          className={cn(
+            'absolute inset-y-0 right-0 flex w-[min(20rem,85vw)] flex-col border-l border-line bg-bg-elevated',
+            'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+            menuOpen ? 'translate-x-0' : 'translate-x-full',
+          )}
+        >
               <div className="flex h-16 items-center justify-between border-b border-line px-4">
                 <span className="text-sm font-bold tracking-widest text-muted uppercase">{dict.nav.menu}</span>
                 <button
@@ -254,12 +291,19 @@ export function SiteHeader({
                   );
                 })}
               </nav>
-            </motion.aside>
-          </div>
-        ) : null}
-      </AnimatePresence>
+        </aside>
+      </div>
 
-      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {/*
+        Monta só quando abre — e isso é metade do ganho, não um detalhe.
+
+        `dynamic()` separa o código num arquivo à parte, mas renderizar o
+        componente fechado ainda obriga o navegador a buscar esse arquivo. Era
+        o que mantinha os ~140 KB da busca e da biblioteca de animação no
+        primeiro carregamento de toda página. Com a montagem condicional, esse
+        peso passa a ser cobrado de quem realmente abre a busca.
+      */}
+      {searchOpen ? <GlobalSearch open onClose={() => setSearchOpen(false)} /> : null}
     </>
   );
 }

@@ -224,17 +224,16 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
             />
             <StatTile label="Cartões amarelos" value={totals.yellowCards} />
             <StatTile label="Cartões vermelhos" value={totals.redCards} />
-            {/* Minutos só aparecem se alguém tiver cadastrado — item 5 do
-                escopo pede exatamente isso. */}
-            {totals.minutes > 0 ? (
-              <StatTile label="Minutos jogados" value={totals.minutes} />
-            ) : (
-              <StatTile
-                label="Média de gols"
-                value={totals.matches > 0 ? (totals.goals / totals.matches).toFixed(2) : '—'}
-                hint="por partida"
-              />
-            )}
+            {/*
+              Minutos jogados saíram a pedido da VFA. No lugar entra a média de
+              gols, que antes só aparecia quando não havia minutos cadastrados
+              — ou seja, o quadro mais útil dependia da ausência do outro.
+            */}
+            <StatTile
+              label="Média de gols"
+              value={totals.matches > 0 ? (totals.goals / totals.matches).toFixed(2) : '—'}
+              hint="por partida"
+            />
           </div>
         </section>
 

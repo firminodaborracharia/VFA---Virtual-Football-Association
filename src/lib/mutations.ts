@@ -132,6 +132,7 @@ export async function createPlayer(input: PlayerCreateInput, actorId: string | n
       currentClubId: input.currentClubId,
       shirtNumber: input.shirtNumber ?? null,
       position: input.position,
+      overall: input.overall ?? null,
       isActive: input.isActive,
       joinedAt: input.joinedAt,
     })

@@ -26,11 +26,19 @@ export const metadata: Metadata = {
 
 const PER_PAGE = 25;
 
+/**
+ * Abas da central de partidas.
+ *
+ * "Adiadas" saiu a pedido da VFA. O status continua existindo no banco e no
+ * painel — uma partida adiada precisa ser marcada como tal para não contar na
+ * tabela —, mas deixou de ter aba própria no site público. Uma aba
+ * permanentemente vazia é pior que aba nenhuma: ocupa espaço e faz o visitante
+ * clicar para não encontrar nada.
+ */
 const CATEGORIES = {
   proximas: { label: 'Próximas', status: 'SCHEDULED' as const, order: 'asc' as const },
   ao_vivo: { label: 'Ao vivo', status: 'LIVE' as const, order: 'asc' as const },
   resultados: { label: 'Resultados', status: 'FINISHED' as const, order: 'desc' as const },
-  adiadas: { label: 'Adiadas', status: 'POSTPONED' as const, order: 'asc' as const },
 };
 
 type CategoryKey = keyof typeof CATEGORIES;

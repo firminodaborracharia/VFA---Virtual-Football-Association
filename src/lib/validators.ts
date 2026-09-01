@@ -9,6 +9,7 @@
 import { z } from 'zod';
 
 import { competitionConfigSchema } from './engine/config';
+import { OVERALL_MAX, OVERALL_MIN } from './ranks';
 
 const hexColor = z
   .string()
@@ -67,6 +68,11 @@ export const playerCreateSchema = z.object({
   currentClubId: optionalText,
   shirtNumber: z.coerce.number().int().min(1).max(99).nullish(),
   position: z.enum(POSITIONS).default('MIDFIELDER'),
+  /**
+   * Nota geral, de 1 a 99. `nullish` porque "ainda não avaliado" é um estado
+   * válido — e diferente de zero, que seria uma avaliação péssima.
+   */
+  overall: z.coerce.number().int().min(OVERALL_MIN).max(OVERALL_MAX).nullish(),
   isActive: z.boolean().default(true),
   joinedAt: isoDate,
   /** Busca os dados do Roblox logo após criar. */

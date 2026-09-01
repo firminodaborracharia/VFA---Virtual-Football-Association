@@ -42,8 +42,15 @@ export const siteSchema = z.object({
   name: z.string().default('VFA'),
   fullName: z.string().default('Virtual Football Association'),
   tagline: z.string().default('Os melhores clubes de futebol 3v3 do Roblox.'),
-  /** O escudo entra pela pasta `public`; troque pelo painel se mudar a arte. */
-  logoUrl: z.string().nullable().default('/vfa-logo.webp'),
+  /**
+   * Vazio de propósito.
+   *
+   * Com um caminho aqui, este padrão vencia o `DEFAULT_CREST` do componente e
+   * o cabeçalho voltava a servir a arte de 172 KB para um quadrado de 40
+   * pixels. Deixando nulo, quem decide o escudo padrão é o componente — que
+   * usa a versão reduzida — e o painel continua sobrepondo quando preenchido.
+   */
+  logoUrl: z.string().nullable().default(null),
   description: z
     .string()
     .default('Site oficial da VFA — resultados, tabelas, estatísticas e notícias.'),
@@ -78,6 +85,8 @@ export const audioSchema = z.object({
    * rolagem, toque ou tecla, em qualquer lugar da página.
    */
   autoPlay: z.boolean().default(true),
+  /** Som curto ao clicar em botões e links, sintetizado no navegador. */
+  clickSound: z.boolean().default(true),
   title: z.string().default(''),
   artist: z.string().default(''),
 });

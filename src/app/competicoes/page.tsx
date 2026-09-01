@@ -14,9 +14,18 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Competições',
-  description: 'Ligas, mata-matas, Libertadores, Champions League e a final Intercontinental da VFA.',
+  description: 'Ligas nacionais, Libertadores, Champions League e a final Intercontinental da VFA.',
 };
 
+/**
+ * Ordem dos blocos na página.
+ *
+ * LEAGUE_PLAYOFF continua na lista de propósito: se a VFA criar um mata-mata
+ * nacional pelo painel, ele aparece no lugar certo. O que a página NÃO faz é
+ * desenhar um bloco vazio quando o tipo não tem nenhuma competição — isso já
+ * era verdade e é o que faz a remoção do mata-mata do seed sumir sozinha da
+ * tela.
+ */
 const GROUP_ORDER = ['LEAGUE', 'LEAGUE_PLAYOFF', 'CONTINENTAL', 'INTERCONTINENTAL', 'CUP'] as const;
 
 const STATUS_LABELS = {
@@ -69,7 +78,7 @@ export default async function CompetitionsPage({
       <PageHeader
         eyebrow={season.name}
         title={dict.pages.competitionsTitle}
-        description="Ligas nacionais, mata-matas, torneios continentais e a decisão intercontinental."
+        description="Ligas nacionais, Libertadores, Champions League e a decisão intercontinental."
         actions={
           seasons.length > 1 ? (
             <div className="flex flex-wrap gap-1.5">

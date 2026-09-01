@@ -22,6 +22,13 @@
       "when": 1787961682805,
       "tag": "0002_player_positions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788225999294,
+      "tag": "0003_player_overall",
+      "breakpoints": true
     }
   ]
 }

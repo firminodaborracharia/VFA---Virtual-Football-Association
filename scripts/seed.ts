@@ -28,7 +28,6 @@ import { roundRobin } from '../src/lib/engine/bracket';
 import {
   CONTINENTAL_PRESET,
   INTERCONTINENTAL_PRESET,
-  LEAGUE_PLAYOFF_PRESET,
   LEAGUE_PRESET,
 } from '../src/lib/engine/config';
 import * as schema from '../src/db/schema';
@@ -395,6 +394,14 @@ async function main() {
           // Um jogador de cada posição, na ordem do gol para o ataque.
           const position = POSITIONS[index];
 
+          /**
+           * Overall entre 74 e 92, para que a demonstração mostre todas as
+           * faixas de rank em uso — de Beginner a Elite X. Um intervalo mais
+           * estreito deixaria selos inteiros invisíveis, e o objetivo do seed
+           * é justamente exibir o site cheio.
+           */
+          const overall = between(74, 92);
+
           const [player] = await db
             .insert(players)
             .values({
@@ -405,6 +412,7 @@ async function main() {
               currentClubId: club.id,
               shirtNumber: index + 1,
               position,
+              overall,
               isActive: true,
               isDemo: true,
               joinedAt: new Date(year, 0, between(5, 25)),
@@ -542,54 +550,19 @@ async function main() {
     }
     log('✓ Tabelas calculadas');
 
-    /* ── Mata-mata das ligas ── */
-    for (const leagueSpec of LEAGUES) {
-      const leagueId = leagueIds.get(leagueSpec.slug)!;
-
-      const [playoff] = await db
-        .insert(competitions)
-        .values({
-          slug: `${leagueSpec.slug}-mata-mata`,
-          name: `${leagueSpec.shortName} — Mata-mata`,
-          shortName: 'Playoff',
-          type: 'LEAGUE_PLAYOFF',
-          status: 'UPCOMING',
-          seasonId: season.id,
-          leagueId,
-          parentSlug: leagueSpec.slug,
-          accent: leagueSpec.accent,
-          sortOrder: leagueSpec.sortOrder + 10,
-          config: LEAGUE_PLAYOFF_PRESET,
-          isDemo: true,
-        })
-        .onConflictDoUpdate({
-          target: competitions.slug,
-          set: { seasonId: season.id, config: LEAGUE_PLAYOFF_PRESET, isDemo: true },
-        })
-        .returning();
-
-      const leagueClubs = clubsByLeague.get(leagueSpec.slug)!;
-      await db.delete(competitionTeams).where(eq(competitionTeams.competitionId, playoff.id));
-      await db.insert(competitionTeams).values(
-        leagueClubs.map((club) => ({ competitionId: playoff.id, clubId: club.id })),
-      );
-
-      // Gera as fases (quartas → semi → final) a partir da tabela da liga:
-      // 1º e 2º entram direto na semifinal, 3º×6º e 4º×5º nas quartas.
-      const { generateKnockout: generateLeagueKnockout } = await import(
-        '../src/lib/engine/generate'
-      );
-
-      await generateLeagueKnockout(playoff.id, {
-        startAt: daysFromNow(-35, 20),
-        daysBetweenRounds: 7,
-        replaceExisting: true,
-        venue: `Arena ${leagueSpec.shortName}`,
-      });
-
-      await playOutKnockout(db, playoff.id, playersByClub);
-    }
-    log('✓ Mata-mata das ligas disputado');
+    /*
+     * ── Sem mata-mata por liga ──
+     *
+     * A VFA decidiu que o mata-mata da temporada é continental, não nacional:
+     * Brasil e Argentina disputam a Libertadores, Premier e LaLiga disputam a
+     * Champions. As zonas de classificação de cada liga já apontam para o
+     * torneio certo, então o caminho do time é liga nacional → continental,
+     * sem uma fase eliminatória intermediária.
+     *
+     * O tipo LEAGUE_PLAYOFF continua existindo no sistema: quem quiser um
+     * mata-mata nacional cria pelo painel. O que mudou foi o padrão da
+     * demonstração, que antes criava quatro deles.
+     */
 
     /* ── Competições continentais ── */
     const continentals = [

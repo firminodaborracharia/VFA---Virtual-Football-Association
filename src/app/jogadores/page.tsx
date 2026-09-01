@@ -7,7 +7,7 @@ import { FilterBar, Pagination } from '@/components/domain/filter-bar';
 import { PageHeader } from '@/components/layout/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { listClubs, listLeagues, listNations, listPlayers } from '@/lib/queries';
-import { POSITION_LABELS } from '@/lib/utils';
+import { POSITION_LABELS, POSITION_ORDER } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,7 +72,7 @@ export default async function PlayersPage({
             {
               key: 'posicao',
               label: 'Todas as posições',
-              options: Object.entries(POSITION_LABELS).map(([value, label]) => ({ value, label })),
+              options: POSITION_ORDER.map((value) => ({ value, label: POSITION_LABELS[value] })),
             },
             {
               key: 'nacionalidade',
@@ -101,6 +101,7 @@ export default async function PlayersPage({
                     slug: player.slug,
                     displayName: player.displayName,
                     shirtNumber: player.shirtNumber,
+                    overall: player.overall,
                     position: player.position,
                     robloxUsername: player.robloxUsername,
                     robloxHeadshotUrl: player.robloxHeadshotUrl,

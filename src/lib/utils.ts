@@ -108,29 +108,48 @@ export function relativeTime(date: Date | string | null | undefined): string {
   return 'agora';
 }
 
+/**
+ * Ordem de exibição das posições: do ataque para o gol.
+ *
+ * Esta constante existe porque a ordem no menu NÃO precisa ser a ordem do
+ * enum no banco. Mudar o enum exigiria recriar o tipo no PostgreSQL; mudar
+ * esta lista é editar uma linha. Toda lista de posições do site passa por
+ * aqui.
+ */
+export const POSITION_ORDER = [
+  'FORWARD',
+  'MIDFIELDER',
+  'ATTACKING_MIDFIELDER',
+  'DEFENSIVE_MIDFIELDER',
+  'DEFENDER',
+  'GOALKEEPER',
+] as const;
+
 export const POSITION_LABELS = {
-  GOALKEEPER: 'Goleiro',
-  DEFENDER: 'Zagueiro',
-  DEFENSIVE_MIDFIELDER: 'Meio-campo defensivo',
+  FORWARD: 'Atacante',
   MIDFIELDER: 'Meio-campo',
   ATTACKING_MIDFIELDER: 'Meio-campo ofensivo',
-  FORWARD: 'Atacante',
+  DEFENSIVE_MIDFIELDER: 'Meio-campo defensivo',
+  DEFENDER: 'Zagueiro',
+  GOALKEEPER: 'Goleiro',
 } as const;
 
 /**
  * Siglas para as etiquetas dos cards, onde não cabe o nome inteiro.
  *
- * VOL e MEA seguem o uso brasileiro de transmissão: volante para o meio-campo
- * defensivo e meia-atacante para o ofensivo. "MED" e "MEO" seriam derivações
- * literais do nome do enum e não significariam nada para quem lê.
+ * Derivadas dos nomes acima, não de jargão de transmissão. Eu havia usado VOL
+ * e MEA — volante e meia-atacante —, que são o uso corrente no Brasil mas não
+ * correspondem ao que está escrito no resto do site. Se a posição se chama
+ * "Meio-campo ofensivo", a sigla precisa ser MEO: quem lê a etiqueta tem de
+ * conseguir ligá-la ao nome sem traduzir nada.
  */
 export const POSITION_SHORT = {
-  GOALKEEPER: 'GOL',
-  DEFENDER: 'ZAG',
-  DEFENSIVE_MIDFIELDER: 'VOL',
-  MIDFIELDER: 'MEI',
-  ATTACKING_MIDFIELDER: 'MEA',
   FORWARD: 'ATA',
+  MIDFIELDER: 'MEI',
+  ATTACKING_MIDFIELDER: 'MEO',
+  DEFENSIVE_MIDFIELDER: 'MED',
+  DEFENDER: 'ZAG',
+  GOALKEEPER: 'GOL',
 } as const;
 
 export const MATCH_STATUS_LABELS = {
@@ -182,5 +201,15 @@ export function pluralize(count: number, singular: string, plural: string): stri
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
-/** Escudo da VFA empacotado com o projeto (public/vfa-logo.webp). */
-export const DEFAULT_CREST = '/vfa-logo.webp';
+/**
+ * Escudo da VFA empacotado com o projeto.
+ *
+ * Duas versões, e a diferença importa: a arte original tem 172 KB e o
+ * cabeçalho a desenha com 40 pixels. Baixar 172 KB em toda página, em todo
+ * dispositivo, para exibir num quadrado do tamanho de uma unha é desperdício
+ * puro — a versão de 96 pixels tem 6 KB e é indistinguível nesse tamanho.
+ *
+ * `DEFAULT_CREST_FULL` continua disponível para onde o escudo aparece grande.
+ */
+export const DEFAULT_CREST = '/vfa-logo-96.webp';
+export const DEFAULT_CREST_FULL = '/vfa-logo.webp';

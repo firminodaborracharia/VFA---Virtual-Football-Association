@@ -1,8 +1,6 @@
 import {
   ArrowRight,
-  BarChart3,
   CalendarDays,
-  Newspaper,
   Shield,
   Table2,
   Trophy,
@@ -11,30 +9,15 @@ import {
 import Link from 'next/link';
 
 import { ClubCrest, PlayerAvatar } from '@/components/common/remote-image';
-import { DemoNotice, NewsCard } from '@/components/domain/cards';
-import { MatchCard, MatchRowItem } from '@/components/domain/match-card';
-import { StandingsTable } from '@/components/domain/standings-table';
+import { DemoNotice } from '@/components/domain/cards';
+import { RankBadge } from '@/components/domain/rank-badge';
 import { ButtonLink } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { withDeadline } from '@/db';
-import type { Dictionary } from '@/lib/i18n/dictionaries';
-import { parseConfig } from '@/lib/engine/config';
-import {
-  getActiveSeason,
-  getLeagueCompetition,
-  getPlayerRanking,
-  getQualificationZones,
-  getSeasonTotals,
-  getStandings,
-  listCompetitions,
-  listLeagues,
-  listMatches,
-  listNews,
-} from '@/lib/queries';
-import { getDictionary, getLocale } from '@/lib/i18n';
+import { getDictionary } from '@/lib/i18n';
+import { getActiveSeason, getSeasonTotals, listClubs, listPlayers } from '@/lib/queries';
 import { getSettings } from '@/lib/settings';
-import { cn, COMPETITION_TYPE_LABELS } from '@/lib/utils';
+import { cn, POSITION_LABELS } from '@/lib/utils';
 
 // Resultados e tabelas mudam a cada partida registrada; a home é sempre
 // renderizada sob demanda em vez de servida de um HTML estático desatualizado.
@@ -45,7 +28,6 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const dict = await getDictionary();
-  const locale = await getLocale();
   const settings = await getSettings();
   const season = await getActiveSeason();
 
@@ -62,49 +44,46 @@ export default async function HomePage() {
     );
   }
 
-  const now = new Date();
-
   /**
    * `withDeadline` para que a home nunca fique num esqueleto eterno.
    *
-   * São dez consultas em paralelo. Se o banco parar de responder no meio, o
-   * `Promise.all` fica pendente para sempre e o visitante vê o carregamento
-   * girar sem fim — sem erro na tela, sem nada no terminal. Com prazo, isso
-   * vira uma mensagem que diz o que aconteceu e o que rodar.
+   * Se o banco parar de responder no meio, o `Promise.all` fica pendente para
+   * sempre e o visitante vê o carregamento girar sem fim — sem erro na tela,
+   * sem nada no terminal. Com prazo, isso vira uma mensagem que diz o que
+   * aconteceu e o que rodar.
    */
-  const [leagues, competitions, upcoming, recent, latestNews, topScorers, topAssists, totals] =
-    await withDeadline(
-      Promise.all([
-        listLeagues(),
-        listCompetitions(season.id),
-        listMatches({ seasonId: season.id, status: 'SCHEDULED', from: now, limit: 5, order: 'asc' }),
-        listMatches({ seasonId: season.id, status: 'FINISHED', limit: 6, order: 'desc' }),
-        listNews({ limit: 4, locale }),
-        getPlayerRanking('goals', { seasonId: season.id, limit: 1 }),
-        getPlayerRanking('assists', { seasonId: season.id, limit: 1 }),
-        getSeasonTotals(season.id),
-      ]),
-      { label: 'Os dados da página inicial' },
-    );
+  const [clubs, playersPage, totals] = await withDeadline(
+    Promise.all([
+      listClubs(),
+      // 12 jogadores: três fileiras de quatro em tela grande, e o link "ver
+      // todos" leva ao restante. Trazer os 120 aqui seria uma home infinita.
+      listPlayers({ limit: 12 }),
+      getSeasonTotals(season.id),
+    ]),
+    { label: 'Os dados da página inicial' },
+  );
 
-  // Tabela resumida da primeira liga cadastrada.
-  const featuredLeague = leagues[0] ?? null;
-  const featuredCompetition = featuredLeague
-    ? await getLeagueCompetition(featuredLeague.id, season.id)
-    : null;
+  /**
+   * Os jogadores com maior overall primeiro.
+   *
+   * A ordenação é feita AQUI e não no banco de propósito: são doze registros
+   * já carregados, e quem ainda não tem nota vai para o fim em vez de sumir da
+   * lista — que é o que um `order by overall desc nulls last` no banco também
+   * faria, mas exigindo mais uma ida ao Postgres para um recorte tão pequeno.
+   */
+  const topPlayers = [...playersPage.rows].sort(
+    (a, b) => (b.overall ?? -1) - (a.overall ?? -1),
+  );
 
-  const [standings, zones] = await Promise.all([
-    featuredCompetition ? getStandings(featuredCompetition.id) : Promise.resolve([]),
-    featuredLeague ? getQualificationZones(featuredLeague.id) : Promise.resolve([]),
-  ]);
+  type ClubRow = (typeof clubs)[number];
+  const clubsByLeague = new Map<string, ClubRow[]>();
+  for (const club of clubs) {
+    const list = clubsByLeague.get(club.leagueName ?? '—') ?? [];
+    list.push(club);
+    clubsByLeague.set(club.leagueName ?? '—', list);
+  }
 
-  const leader = standings[0] ?? null;
-  const scorer = topScorers[0] ?? null;
-  const assistant = topAssists[0] ?? null;
-  const featuredArticle = latestNews.rows.find((item) => item.isFeatured) ?? latestNews.rows[0];
-  const otherNews = latestNews.rows.filter((item) => item.slug !== featuredArticle?.slug).slice(0, 3);
-
-  const hasDemoData = [...recent.rows, ...upcoming.rows].length > 0 && latestNews.rows.some((n) => n.isDemo);
+  const hasDemoData = clubs.some((club) => club.isDemo);
 
   return (
     <>
@@ -219,217 +198,102 @@ export default async function HomePage() {
       <div className="container-vfa space-y-12 py-10">
         {hasDemoData ? <DemoNotice /> : null}
 
-        {/* ══════════ CATEGORIAS ══════════ */}
+        {/*
+          ══════════ CLUBES ══════════
+
+          Agrupados por liga, e não numa grade única.
+
+          Com 24 clubes lado a lado, a liga de cada um vira uma etiqueta que
+          ninguém lê. Agrupado, a estrutura da VFA — quatro ligas, seis clubes
+          cada — fica visível sem precisar de explicação.
+        */}
         <section>
-          <SectionTitle title={dict.home.categories} />
-          <CategoryGrid dict={dict} />
+          <SectionTitle title={dict.nav.clubs} href="/clubes" linkLabel={dict.home.viewAll} />
+
+          {clubs.length === 0 ? (
+            <EmptyState
+              icon={<Shield className="size-6" />}
+              title={dict.home.noClubs}
+              description={dict.home.noClubsHelp}
+            />
+          ) : (
+            <div className="space-y-8">
+              {[...clubsByLeague.entries()].map(([leagueName, leagueClubs]) => (
+                <div key={leagueName}>
+                  <div className="mb-3 flex items-center gap-3">
+                    <span className="eyebrow">{leagueName}</span>
+                    <span className="rule-accent" aria-hidden />
+                  </div>
+
+                  <div className="stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {leagueClubs.map((club) => (
+                      <Link
+                        key={club.id}
+                        href={`/clubes/${club.slug}`}
+                        className="glass group flex items-center gap-3 rounded-xl p-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 motion-reduce:hover:translate-y-0"
+                      >
+                        <ClubCrest club={club} size={40} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-fg">{club.name}</p>
+                          <p className="truncate text-xs text-muted">
+                            {club.ownerName ?? club.abbreviation}
+                          </p>
+                        </div>
+                        <ArrowRight className="size-4 shrink-0 text-subtle transition-all group-hover:translate-x-0.5 group-hover:text-accent" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/*
-          ══════════ NOTÍCIAS ══════════
+          ══════════ JOGADORES ══════════
 
-          Primeira seção da home, e não a última como estava.
-
-          Site de liga é veículo antes de ser banco de dados: quem chega quer
-          saber o que aconteceu, e tabela e calendário estão a um clique no
-          menu. Notícia no rodapé é notícia que ninguém lê — e, pior, deixa a
-          home idêntica em todos os dias em que nenhum jogo acontece.
+          Ordenados por overall, com o selo do rank em evidência. É a lista que
+          responde "quem são os melhores da VFA hoje" — a pergunta que leva
+          alguém a abrir um site de liga.
         */}
         <section>
-          <SectionTitle
-            title={`${settings.site.name} News`}
-            href="/noticias"
-            linkLabel={dict.home.allNews}
-          />
-          {featuredArticle ? (
-            <div className="space-y-4">
-              <NewsCard article={featuredArticle} featured />
-              {otherNews.length > 0 ? (
-                <div className="stagger grid gap-4 sm:grid-cols-3">
-                  {otherNews.map((article) => (
-                    <NewsCard key={article.id} article={article} />
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : (
+          <SectionTitle title={dict.nav.players} href="/jogadores" linkLabel={dict.home.viewAll} />
+
+          {topPlayers.length === 0 ? (
             <EmptyState
-              icon={<Newspaper className="size-6" />}
-              title={dict.home.noNews}
-              description={dict.home.noNewsHelp}
+              icon={<Users className="size-6" />}
+              title={dict.home.noPlayers}
+              description={dict.home.noPlayersHelp}
             />
-          )}
-        </section>
-
-        {/* ══════════ PRÓXIMA PARTIDA + DESTAQUES ══════════ */}
-        <section className="grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <SectionTitle
-              title={dict.home.nextMatch}
-              href="/partidas"
-              linkLabel={dict.home.allMatches}
-            />
-            {upcoming.rows[0] ? (
-              <MatchCard match={upcoming.rows[0]} label={dict.home.nextFixture} />
-            ) : (
-              <EmptyState
-                title={dict.home.noMatches}
-                description={dict.home.noMatchesHelp}
-              />
-            )}
-
-            {upcoming.rows.length > 1 ? (
-              <Card className="mt-4 divide-y divide-line overflow-hidden">
-                {upcoming.rows.slice(1, 4).map((match) => (
-                  <MatchRowItem key={match.id} match={match} />
-                ))}
-              </Card>
-            ) : null}
-          </div>
-
-          <div className="space-y-4">
-            <SectionTitle title={dict.home.highlights} href="/destaques" linkLabel={dict.home.viewAll} />
-
-            {leader ? (
-              <HighlightCard
-                label={dict.home.tableLeader}
-                href={`/clubes/${leader.club.slug}`}
-                media={<ClubCrest club={leader.club} size={44} />}
-                title={leader.club.name}
-                subtitle={`${leader.points} ${dict.home.points} · ${leader.won}${dict.standings.winShort} ${leader.drawn}${dict.standings.drawShort} ${leader.lost}${dict.standings.lossShort}`}
-              />
-            ) : null}
-
-            {scorer ? (
-              <HighlightCard
-                label={dict.home.topScorer}
-                href={`/jogadores/${scorer.playerSlug}`}
-                media={
-                  <PlayerAvatar
-                    player={{
-                      displayName: scorer.playerName,
-                      robloxHeadshotUrl: scorer.robloxHeadshotUrl,
-                      robloxAvatarUrl: scorer.robloxAvatarUrl,
-                    }}
-                    size={44}
-                  />
-                }
-                title={scorer.playerName}
-                subtitle={`${scorer.goals} ${scorer.goals === 1 ? dict.home.goal : dict.home.goals} · ${scorer.clubName ?? dict.home.noClub}`}
-                value={scorer.goals}
-              />
-            ) : null}
-
-            {assistant ? (
-              <HighlightCard
-                label={dict.home.topAssists}
-                href={`/jogadores/${assistant.playerSlug}`}
-                media={
-                  <PlayerAvatar
-                    player={{
-                      displayName: assistant.playerName,
-                      robloxHeadshotUrl: assistant.robloxHeadshotUrl,
-                      robloxAvatarUrl: assistant.robloxAvatarUrl,
-                    }}
-                    size={44}
-                  />
-                }
-                title={assistant.playerName}
-                subtitle={`${assistant.assists} ${dict.home.assists} · ${assistant.clubName ?? dict.home.noClub}`}
-                value={assistant.assists}
-              />
-            ) : null}
-
-            {!leader && !scorer && !assistant ? (
-              <EmptyState
-                title="Sem destaques ainda"
-                description="Os líderes aparecem depois das primeiras partidas."
-              />
-            ) : null}
-          </div>
-        </section>
-
-        {/* ══════════ ÚLTIMOS RESULTADOS ══════════ */}
-        <section>
-          <SectionTitle title={dict.home.latestResults} href="/partidas" linkLabel={dict.home.viewAll} />
-          {recent.rows.length > 0 ? (
-            <Card className="divide-y divide-line overflow-hidden">
-              {recent.rows.map((match) => (
-                <MatchRowItem key={match.id} match={match} />
-              ))}
-            </Card>
           ) : (
-            <EmptyState
-              title="Nenhum resultado registrado"
-              description="Os placares aparecem aqui assim que as partidas forem encerradas."
-            />
-          )}
-        </section>
-
-        {/* ══════════ CLASSIFICAÇÃO RESUMIDA ══════════ */}
-        {featuredLeague && standings.length > 0 ? (
-          <section>
-            <SectionTitle
-              title={`${dict.home.standings} — ${featuredLeague.name}`}
-              href="/classificacao"
-              linkLabel={dict.home.fullTable}
-            />
-            <StandingsTable
-              dict={dict}
-              rows={standings}
-              zones={zones}
-              pointsPerWin={
-                featuredCompetition ? parseConfig(featuredCompetition.config).points.win : 3
-              }
-            />
-          </section>
-        ) : null}
-
-        {/* ══════════ COMPETIÇÕES ══════════ */}
-        {competitions.length > 0 ? (
-          <section>
-            <SectionTitle
-              title={dict.home.competitions}
-              href="/competicoes"
-              linkLabel={dict.home.viewAll}
-            />
-            <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {competitions
-                .filter((competition) => competition.status !== 'DRAFT')
-                .slice(0, 8)
-                .map((competition) => (
-                  <Link
-                    key={competition.id}
-                    href={`/competicoes/${competition.slug}`}
-                    className="sheen group rounded-2xl border border-line bg-surface p-5 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-pop motion-reduce:hover:translate-y-0"
-                  >
-                    <div
-                      className="flex size-11 items-center justify-center rounded-xl text-lg font-black"
-                      style={{
-                        backgroundColor: `${competition.accent ?? '#00e08f'}1a`,
-                        color: competition.accent ?? 'var(--vfa-accent)',
-                      }}
-                    >
-                      {(competition.shortName ?? competition.name).slice(0, 2).toUpperCase()}
-                    </div>
-                    <h3 className="mt-4 font-bold text-fg transition-colors group-hover:text-accent">
-                      {competition.name}
-                    </h3>
-                    <p className="mt-1 text-xs text-subtle">
-                      {COMPETITION_TYPE_LABELS[competition.type]}
-                    </p>
-                    {competition.championName ? (
-                      <p className="mt-3 flex items-center gap-1.5 border-t border-line pt-3 text-xs text-accent-warm">
-                        <Trophy className="size-3.5" />
-                        {competition.championName}
+            <div className="stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {topPlayers.map((player) => (
+                <Link
+                  key={player.id}
+                  href={`/jogadores/${player.slug}`}
+                  className="glass group rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 motion-reduce:hover:translate-y-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <PlayerAvatar player={player} size={44} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-fg">{player.displayName}</p>
+                      <p className="truncate text-xs text-muted">
+                        {POSITION_LABELS[player.position]}
                       </p>
-                    ) : null}
-                  </Link>
-                ))}
-            </div>
-          </section>
-        ) : null}
+                    </div>
+                  </div>
 
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-line/60 pt-3">
+                    <span className="truncate text-xs text-subtle">
+                      {player.clubName ?? dict.home.noClub}
+                    </span>
+                    <RankBadge overall={player.overall} size="sm" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </>
   );
@@ -462,82 +326,6 @@ function SectionTitle({
     </div>
   );
 }
-
-/**
- * Grade de categorias — o atalho para as seções principais.
- *
- * Cada cartão é uma porta larga com ícone, título e uma frase que diz o que se
- * encontra ali. Isso resolve um problema real do menu: "Destaques" e
- * "Estatísticas" não dizem nada a quem chega pela primeira vez, e o menu não
- * tem espaço para explicar. Aqui tem.
- */
-function CategoryGrid({ dict }: { dict: Dictionary }) {
-  const categories = [
-    {
-      href: '/jogadores',
-      icon: Users,
-      title: dict.nav.players,
-      description: dict.categories.players,
-    },
-    { href: '/clubes', icon: Shield, title: dict.nav.clubs, description: dict.categories.clubs },
-    {
-      href: '/classificacao',
-      icon: Table2,
-      title: dict.nav.standings,
-      description: dict.categories.standings,
-    },
-    {
-      href: '/partidas',
-      icon: CalendarDays,
-      title: dict.nav.matches,
-      description: dict.categories.matches,
-    },
-    {
-      href: '/competicoes',
-      icon: Trophy,
-      title: dict.nav.competitions,
-      description: dict.categories.competitions,
-    },
-    {
-      href: '/estatisticas',
-      icon: BarChart3,
-      title: dict.nav.stats,
-      description: dict.categories.stats,
-    },
-  ];
-
-  return (
-    <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {categories.map((category) => {
-        const Icon = category.icon;
-        return (
-          <Link
-            key={category.href}
-            href={category.href}
-            className="glass group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 motion-reduce:hover:translate-y-0"
-          >
-            {/* Brilho que segue o canto superior direito no hover. Aparece por
-                trás do conteúdo e some sozinho — nenhum estado em JavaScript. */}
-            <span
-              className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full bg-accent/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
-              aria-hidden
-            />
-
-            <span className="relative flex size-11 items-center justify-center rounded-xl bg-accent/12 text-accent transition-transform duration-300 group-hover:scale-110">
-              <Icon className="size-5" />
-            </span>
-
-            <h3 className="display-vfa relative mt-4 text-lg">{category.title}</h3>
-            <p className="relative mt-1 text-sm text-muted">{category.description}</p>
-
-            <ArrowRight className="absolute top-5 right-5 size-4 text-subtle transition-all duration-300 group-hover:translate-x-1 group-hover:text-accent" />
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
-
 /** Um número da faixa do hero. */
 function HeroStat({
   label,
@@ -562,42 +350,5 @@ function HeroStat({
         {label}
       </div>
     </div>
-  );
-}
-
-function HighlightCard({
-  label,
-  href,
-  media,
-  title,
-  subtitle,
-  value,
-}: {
-  label: string;
-  href: string;
-  media: React.ReactNode;
-  title: string;
-  subtitle: string;
-  value?: number;
-}) {
-  return (
-    <Link
-      href={href}
-      className="sheen group flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 transition-all duration-300 hover:border-accent/40 hover:shadow-pop"
-    >
-      {media}
-      <div className="min-w-0 flex-1">
-        <p className="text-[0.65rem] font-bold tracking-widest text-subtle uppercase">{label}</p>
-        <p className="truncate font-bold text-fg transition-colors group-hover:text-accent">
-          {title}
-        </p>
-        <p className="truncate text-xs text-muted">{subtitle}</p>
-      </div>
-      {typeof value === 'number' ? (
-        <span className="shrink-0 font-mono text-2xl font-black text-accent tabular-nums">
-          {value}
-        </span>
-      ) : null}
-    </Link>
   );
 }

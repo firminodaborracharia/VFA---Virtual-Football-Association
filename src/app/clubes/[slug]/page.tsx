@@ -161,8 +161,8 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
             <StatTile label="Empates" value={totals.drawn} />
             <StatTile label="Derrotas" value={totals.lost} />
             <StatTile label="Gols pró" value={totals.goalsFor} />
-            <StatTile label="Gols contra" value={totals.goalsAgainst} />
-            <StatTile label="Saldo" value={formatDiff(goalDiff)} />
+            <StatTile label="Gols sofridos" value={totals.goalsAgainst} />
+            <StatTile label="Saldo de gols" value={formatDiff(goalDiff)} hint="marcados − sofridos" />
             <StatTile
               label="Pontos"
               value={totals.points}

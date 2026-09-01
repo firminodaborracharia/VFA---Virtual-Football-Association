@@ -80,15 +80,29 @@ export function StandingsTable({
               </th>
               {!compact ? (
                 <>
-                  <th scope="col" className="w-12 py-3 text-center font-semibold">
+                  {/* A sigla cabe na coluna; o nome por extenso fica no
+                      `title`, para quem passar o mouse e não souber o que é. */}
+                  <th
+                    scope="col"
+                    className="w-12 py-3 text-center font-semibold"
+                    title={dict.standings.goalsForFull}
+                  >
                     {dict.standings.goalsFor}
                   </th>
-                  <th scope="col" className="w-12 py-3 text-center font-semibold">
+                  <th
+                    scope="col"
+                    className="w-12 py-3 text-center font-semibold"
+                    title={dict.standings.goalsAgainstFull}
+                  >
                     {dict.standings.goalsAgainst}
                   </th>
                 </>
               ) : null}
-              <th scope="col" className="w-14 py-3 text-center font-semibold">
+              <th
+                scope="col"
+                className="w-14 py-3 text-center font-semibold"
+                title={dict.standings.goalDifferenceFull}
+              >
                 {dict.standings.goalDifference}
               </th>
               {!compact ? (

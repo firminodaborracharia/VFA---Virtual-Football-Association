@@ -58,13 +58,14 @@ export const continentEnum = pgEnum('continent', [
 /**
  * Posições em campo.
  *
- * A ORDEM importa e não é alfabética: vai do gol para o ataque. É essa ordem
- * que os menus e as listas de elenco usam, porque é assim que qualquer pessoa
- * que acompanha futebol espera ver uma escalação — goleiro primeiro, atacante
- * por último. Ordenar por nome jogaria "Atacante" para o começo.
+ * A ordem aqui é a do ATAQUE para o GOL, na sequência exata em que a VFA as
+ * listou. A versão anterior ia do gol para o ataque, seguindo a convenção de
+ * escalação — mas convenção genérica perde para a preferência de quem
+ * administra a liga, e é essa ordem que aparece em todo menu do site.
  *
- * Acrescentar um valor no meio de um enum do PostgreSQL exige `ALTER TYPE ...
- * ADD VALUE ... BEFORE/AFTER`, e é isso que a migration 0002 faz.
+ * Mudar a ordem do enum no PostgreSQL exigiria recriar o tipo. Não vale: a
+ * ordem de exibição é decidida por `POSITION_ORDER` em src/lib/utils.ts, que
+ * é onde o site lê. O enum guarda os valores; ele não precisa guardar gosto.
  */
 export const positionEnum = pgEnum('position', [
   'GOALKEEPER',
@@ -336,6 +337,18 @@ export const players = pgTable(
     currentClubId: text('current_club_id').references(() => clubs.id, { onDelete: 'set null' }),
     shirtNumber: integer('shirt_number'),
     position: positionEnum('position').default('MIDFIELDER').notNull(),
+
+    /**
+     * Nota geral do jogador, de 1 a 99, digitada pelo administrador.
+     *
+     * O RANK (Elite X, Gold A…) não fica aqui: é derivado desta nota em
+     * src/lib/ranks.ts. Guardar os dois abriria espaço para eles divergirem —
+     * bastaria alguém editar a nota e esquecer o rank.
+     *
+     * Nulo é um estado legítimo: jogador recém-cadastrado ainda não foi
+     * avaliado, e isso é diferente de ter nota zero.
+     */
+    overall: integer('overall'),
     isActive: boolean('is_active').default(true).notNull(),
     isDemo: boolean('is_demo').default(false).notNull(),
     joinedAt: timestamp('joined_at', { withTimezone: true }),

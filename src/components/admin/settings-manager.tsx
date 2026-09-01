@@ -196,6 +196,16 @@ export function SettingsManager({ settings }: { settings: Settings }) {
             primeiro clique, rolagem ou toque em qualquer lugar da página.
           </p>
 
+          <Checkbox
+            label="Som ao clicar em botões"
+            checked={audio.clickSound}
+            onChange={(event) => setAudio({ ...audio, clickSound: event.target.checked })}
+          />
+          <p className="-mt-2 text-xs text-subtle">
+            Um &quot;toc&quot; curto, gerado pelo navegador — não baixa arquivo nenhum. Quem tiver
+            &quot;reduzir movimento&quot; ligado no sistema não ouve nada.
+          </p>
+
           <Field
             label="Endereço do áudio"
             hint="Coloque o arquivo em public/audio/ e use /audio/nome.mp3, ou cole uma URL completa. Deixe em branco para o disco ficar só como enfeite, sem som. Use apenas música que você tem direito de publicar — o arquivo fica acessível a qualquer visitante do site."

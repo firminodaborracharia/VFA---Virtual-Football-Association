@@ -7,7 +7,6 @@
  * `useToast()` e dispara mensagens de sucesso, erro ou aviso.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
 import {
   createContext,
@@ -89,19 +88,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         aria-live="polite"
         aria-label="Notificações"
       >
-        <AnimatePresence initial={false}>
-          {toasts.map((item) => {
+        {/*
+          Animação em CSS, não em biblioteca.
+
+          Este componente vive no layout raiz, então tudo que ele importa vai
+          junto em TODA página do site. O `framer-motion` daqui custava cerca
+          de 130 KB de JavaScript no primeiro carregamento — para animar a
+          entrada de um aviso que a maioria dos visitantes nunca vê.
+
+          A saída animada foi o que se perdeu: o aviso agora desaparece de uma
+          vez em vez de deslizar para fora. É um detalhe de 0,2 segundo, e a
+          troca por 130 KB a menos no celular de quem visita é vantajosa.
+        */}
+        {toasts.map((item) => {
             const Icon = ICONS[item.tone];
             return (
-              <motion.div
+              <div
                 key={item.id}
-                layout
-                initial={{ opacity: 0, y: 16, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className={cn(
-                  'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border bg-surface/95 p-3.5 shadow-pop backdrop-blur',
+                  'animate-fade-up pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border bg-surface/95 p-3.5 shadow-pop backdrop-blur',
                   TONE_CLASSES[item.tone],
                 )}
               >
@@ -120,10 +125,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 >
                   <X className="size-3.5" />
                 </button>
-              </motion.div>
+              </div>
             );
           })}
-        </AnimatePresence>
       </div>
     </ToastContext.Provider>
   );

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader, type HeaderUser } from '@/components/layout/site-header';
+import { ClickSound } from '@/components/layout/click-sound';
 import { VinylPlayer } from '@/components/layout/vinyl-player';
 import { findLocalTrack } from '@/lib/audio-file';
 import { getDictionary, getLocale, LOCALE_TAGS } from '@/lib/i18n';
@@ -133,6 +134,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             discordUrl={settings.site.discordInviteUrl}
             dict={dict}
           />
+
+          {/* Som de clique. Não desenha nada — só escuta a página. */}
+          {settings.audio.clickSound ? <ClickSound /> : null}
 
           {settings.audio.enabled ? (
             <VinylPlayer

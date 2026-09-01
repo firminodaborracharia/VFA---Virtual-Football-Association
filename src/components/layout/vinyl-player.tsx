@@ -350,7 +350,23 @@ export function VinylPlayer({
           ref={audioRef}
           src={track.url}
           loop
-          preload={autoPlay ? 'auto' : 'none'}
+          /**
+           * `none`, SEMPRE — inclusive com autoplay ligado.
+           *
+           * Isto aqui foi um erro caro: ao ligar o autoplay eu troquei para
+           * `auto`, achando que o navegador precisava dos dados prontos para
+           * tocar. Não precisa. O efeito real foi que TODO visitante passou a
+           * baixar o arquivo de música inteiro — 9 MB, no caso — antes de a
+           * página terminar de carregar, competindo por banda com o HTML, o
+           * CSS e as imagens. Num celular em rede móvel isso é a diferença
+           * entre um site rápido e um site que não abre.
+           *
+           * `play()` inicia o download sozinho quando é chamado, e o áudio
+           * começa assim que houver buffer suficiente. O ganho de `auto` seria
+           * alguns décimos de segundo no início da faixa; o custo é a página
+           * inteira.
+           */
+          preload="none"
           onError={() => setBroken(true)}
           onEnded={() => setPlaying(false)}
           onPause={() => setPlaying(false)}

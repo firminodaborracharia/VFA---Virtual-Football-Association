@@ -350,11 +350,7 @@ function SquadGroup({
               <span className="shrink-0 text-[0.65rem] font-bold text-subtle">
                 {POSITION_SHORT[player.position]}
               </span>
-              {player.minutes > 0 ? (
-                <span className="w-10 shrink-0 text-right font-mono text-xs text-subtle tabular-nums">
-                  {player.minutes}&apos;
-                </span>
-              ) : null}
+
             </Link>
           </li>
         ))}
